@@ -1,0 +1,1003 @@
+#include <vcl.h>
+#pragma hdrstop
+
+
+#include "NK_3Unit.h"
+#include "DataModule.h"
+#include <DateUtils.hpp>
+
+
+#pragma package (smart_init)
+#pragma resource "*.dfm"
+
+
+TNK_3Form * NK_3Form;
+
+
+AnsiString   sql_group_by = "",                                                 // текст окончания SQL который будем очищать
+             sql_text     = "";                                                 // текст основного SQL который будем очищать
+
+TFDQuery   * q1;                                                                // Query с которым будем работать
+
+
+
+
+
+// BitBtn1Click
+// BitBtn2Click
+// BitBtn3Click
+// BitBtn4Click
+// BitBtn5Click
+// BitBtn6Click
+// BitBtn7Click
+// BitBtn8Click
+// CheckBox1Click
+// Clear_StringGrid
+// Create_StringGrid
+// Date_Diap
+// Form_Max
+// Form_Min
+// FormClose
+// FormCreate
+// RadioGroup1Click
+// RadioGroup2Click
+
+
+
+
+
+
+
+
+__fastcall TNK_3Form::TNK_3Form (TComponent* Owner) : TForm (Owner) {
+}
+
+
+void __fastcall TNK_3Form::Form_Min () { // Уменьшение размера формы
+
+    Panel2 -> Visible = false;
+    Panel3 -> Visible = false;
+    CheckBox1 -> Visible = false;
+
+    NK_3Form -> Height = 117;
+    if (NK_3Form -> Position != poMainFormCenter)
+        NK_3Form -> Position = poMainFormCenter;
+}
+
+
+void __fastcall TNK_3Form::Form_Max () { // Увеличение размера формы
+
+    Panel2 -> Visible = true;
+    Panel3 -> Visible = true;
+    StringGrid1 -> Visible = true;
+    NK_3Form -> Height = 500;
+    if (NK_3Form -> Position != poMainFormCenter)
+        NK_3Form -> Position = poMainFormCenter;
+}
+
+
+bool __fastcall TNK_3Form::Clear_StringGrid ()
+{ // разные проверки и очистка StringGrida
+    //////////Проверки
+    if (RadioGroup1 -> ItemIndex == -1 || RadioGroup2 -> ItemIndex == -1)
+    { // if Форма обучения и критерии по фак-ту или курсу
+        ShowMessage ("Укажите все критерии выбора!");
+        return false;
+    }
+
+    // ----очищение содержимого   StringGrid
+    for (int i = 0; i < StringGrid1 -> ColCount; i++)
+    { // for  StringGrid1 -> RowCount
+        for (int j = 0; j < StringGrid1 -> RowCount + 1; j++)
+        { // for  StringGrid1 -> RowCount
+            StringGrid1 -> Cells[i][j] = "";
+        } // end for  StringGrid1 -> RowCount
+    } // end for  StringGrid1 -> ColCount
+
+    return true;
+}
+
+
+void __fastcall TNK_3Form::Create_StringGrid ()
+{ // Формирование заполненного StringGrid-a
+
+    q1 = DataModule1 -> Vozrast3NKFDQuery;
+    // Открываем Query в зависимости от выбранного
+    q1 -> Close ();
+    q1 -> SQL -> Clear ();
+    q1 -> SQL -> Add (sql_text + sql_group_by);
+    q1 -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    q1 -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+    q1 -> Open ();
+    int rec_z = q1 -> RecordCount;
+
+    if (!rec_z || (rec_z == 1 && q1 -> FieldByName ("COUNT") -> Value == 0)) {
+        ShowMessage ("Нет данных по выбранным критериям");
+        return;
+    }
+
+    StringGrid1 -> RowCount = rec_z + 2;
+    if (CheckBox1 -> Checked) {
+        StringGrid1 -> ColCount = 3;
+        StringGrid1 -> Cells[2][0] = "Пол";
+    }
+    else
+        StringGrid1 -> ColCount = 2;
+
+    if (RadioGroup2 -> ItemIndex)
+        StringGrid1 -> Cells[0][0] = "Курс";
+    StringGrid1 -> ColWidths[1] = 64;
+    StringGrid1 -> Cells[1][0] = "Кол-во";
+
+    for (int k = 1; k <= rec_z; k++) { // for по количеству записей в Query
+
+        // если включен выбор по курсам, то заносим курс
+        if (RadioGroup2 -> ItemIndex)
+            StringGrid1 -> Cells[0][k] =
+                AnsiString (q1 -> FieldByName ("KURS") -> AsString) + " курс";
+        // если включен выбор по полу
+        if (CheckBox1 -> Checked)
+            StringGrid1 -> Cells[2][k] = q1 -> FieldByName ("POL") -> AsString;
+        // занесение количества студентов
+        StringGrid1 -> Cells[1][k] =
+            AnsiString (q1 -> FieldByName ("COUNT") -> AsString);
+        q1 -> Next ();
+    } // end for по количеству записей в Query
+
+    int sum = 0;
+    // Подбить сумму по столбцам ВСЕГО
+    for (int g = 1; g < StringGrid1 -> RowCount-1; g++) { // for ВСЕГО
+        sum += StrToInt (StringGrid1 -> Cells[1][g]);
+    } // end for ВСЕГО
+
+    StringGrid1 -> Cells[0][StringGrid1 -> RowCount - 1] = "ВСЕГО:";
+    // занесение суммы в последней строке
+    StringGrid1 -> Cells[1][StringGrid1 -> RowCount - 1] = AnsiString (sum);
+
+    // Увеличение формы
+    Form_Max ();
+
+}
+
+
+AnsiString TNK_3Form::Date_Diap (int let)
+{ // функция возвращает диапазон для рассчета возраста студентов
+    // НАДО ПОЛУЧИТЬ: and  people.data_r between '07.09.1987' and '06.09.1988'
+
+    AnsiString r1 = ""; // сама часть sql
+    AnsiString r2 = ""; // вторая дата
+    // сдвиг текущей даты на количество let назад
+    TDateTime d = IncYear (curent_date, -let);
+    // вторая дата
+    r2 = DateToStr (d);
+
+    switch (let) { // switch по возрасту
+    case 15: // 15 и меньше
+        d = IncYear (d, -1); // сдвиг текущей даты на год назад
+        r1 = " and  p.data_r > '" + DateToStr (d) + "' ";
+        break;
+    case 60: // 60 и больше
+        d += 1.0; // сдвиг текущей даты на один день вперед
+        r1 = " and  p.data_r < '" + DateToStr (d) + "' ";
+        break;
+    default: // 16-59
+        d = IncYear (d, -1);
+        d += 1.0;
+        // d= IncMonth (d,-1); //сдвиг текущей даты на один месяц назад
+        r1 = " and  p.data_r between '" + DateToStr (d) + "' and '" +
+            r2 + "' ";
+        break;
+    } // end switch по возрасту
+    return r1; // возвращаем кусок SQL
+}
+
+
+void __fastcall TNK_3Form::FormClose (TObject *Sender, TCloseAction &Action) {
+    // Закрытие формы, как буд-то она развертывается в середину
+    TRect r1, r2;
+    r1 = Rect (Left + Width / 2, Top + Height / 2, Left + Width / 2,
+        Top + Height / 2);
+    r2 = BoundsRect;
+    DrawAnimatedRects (Handle, IDANI_CAPTION, &r2, &r1);
+    // меняется только последовательность последних параметров
+
+    Action = caFree;
+}
+
+
+void __fastcall TNK_3Form::BitBtn1Click (TObject *Sender)
+{ // Показать по возрасту
+
+    NK_3Form -> Caption = "Распределение студентов по возрасту";
+    // очищение содержимого   StringGrid
+    if (!Clear_StringGrid ())
+        return;
+    ////////
+    q1 = DataModule1 -> Vozrast3NKFDQuery;
+
+    switch (RadioGroup2 -> ItemIndex) { // switch выбор по критериям
+    case 0: // по факультету
+        sql_text = "select count (*), pol from people  p  \
+                     where p.n_fac=:FAC \
+                     and   p.vid_edu=:EDU  \
+                     and p.status_people in (1,3) ";
+        sql_group_by = " group by  pol";
+        break;
+    case 1: // по курсам
+        sql_text = "select count (*), pol, kurs from people  p  \
+                     where p.n_fac=:FAC \
+                     and   p.vid_edu=:EDU  \
+                     and p.status_people in (1,3) ";
+        sql_group_by = " group by  kurs, pol";
+        break;
+    } // end switch выбор по критериям
+
+    if (RadioGroup1 -> ItemIndex && RadioGroup2 -> ItemIndex)
+    { // if заочное и по курсам
+        StringGrid1 -> RowCount = 13;
+        StringGrid1 -> Cells[0][11] = "6 курс Ж";
+        StringGrid1 -> Cells[0][12] = "6 курс М";
+    } // end if заочное и по курсам
+    else { // else
+        if (RadioGroup2 -> ItemIndex)
+            StringGrid1 -> RowCount = 11; // по курсам
+        else
+            StringGrid1 -> RowCount = 3; // по факультетам
+    } // end else
+
+    StringGrid1 -> ColCount = 26;
+    StringGrid1 -> Cells[25][0] = "Всего";
+    StringGrid1 -> ColWidths[1] = 64;
+
+    if (RadioGroup2 -> ItemIndex) { // if по курсам
+        for (int l = 10; l >= 2; l -= 2) {
+            StringGrid1 -> Cells[0][l] = AnsiString (l / 2) + " курс М";
+        }
+        for (int m = 9; m >= 1; m -= 2) {
+            StringGrid1 -> Cells[0][m] = AnsiString (m / 2 + 1) + " курс Ж";
+        }
+    } // end if по курсам
+    else { // else по факультетам
+        StringGrid1 -> Cells[0][1] = "Ж";
+        StringGrid1 -> Cells[0][2] = "М";
+    } // end else по факультетам
+
+    for (int i = 17; i <= 40; i++) { // for для начала рассчета
+        // Открываем Query в зависимости от выбранного
+        q1 -> Close ();
+        q1 -> SQL -> Clear ();
+        q1 -> SQL -> Add (sql_text + Date_Diap (i) + sql_group_by);
+        q1 -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+        q1 -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+        q1 -> Open ();
+        int rec_z = q1 -> RecordCount;
+        switch (i) { // switch возраст
+        case 15:
+            StringGrid1 -> Cells[i - 16][0] = AnsiString (i) + " и меньше";
+            break;
+        case 60:
+            StringGrid1 -> Cells[i - 16][0] = AnsiString (i) + " и больше";
+            break;
+        default:
+            StringGrid1 -> Cells[i - 16][0] = AnsiString (i);
+            break;
+        } // end switch возраст
+
+        for (int k = 1; k <= rec_z; k++) { // for по количеству записей в Query
+            int col;
+            if (RadioGroup2 -> ItemIndex) { // if по курсам
+                col = q1 -> FieldByName ("KURS") -> AsInteger * 2;
+                if (q1 -> FieldByName ("POL") -> AsString == "Ж")
+                    col--;
+            }
+            else { // else по факультетам
+                if (q1 -> FieldByName ("POL") -> AsString == "Ж")
+                    col = 1;
+                else
+                    col = 2;
+            }
+            // занесение количества студентов
+            StringGrid1 -> Cells[i - 16][col] =
+                AnsiString (q1 -> FieldByName ("COUNT") -> AsString);
+            q1 -> Next ();
+        } // end for по количеству записей в Query
+    } // end for конец рассчета
+
+    // Подбить сумму по строкам ВСЕГО
+    for (int g = 1; g <= StringGrid1 -> RowCount - 1; g++) { // for ВСЕГО
+        int sum = 0;
+        for (int t = 1; t < StringGrid1 -> ColCount - 1; t++)
+        { // for по ячейкам одной строки
+            if (!StringGrid1 -> Cells[t][g].IsEmpty ())
+                sum += StrToInt (StringGrid1 -> Cells[t][g]);
+        } // end for по ячейкам одной строки
+
+        // занесение суммы по одной строке
+        StringGrid1 -> Cells[25][g] = AnsiString (sum);
+    } // end for ВСЕГО
+
+    // Увеличение формы
+    Form_Max ();
+}
+
+
+void __fastcall TNK_3Form::RadioGroup2Click (TObject *Sender) {
+    // уменьшение формы
+    if (NK_3Form -> Height > 120)
+        Form_Min ();
+}
+
+
+void __fastcall TNK_3Form::FormCreate (TObject *Sender) {
+    // текущая дата
+    curent_date = cur_d ();
+
+    // Появление формы, как буд-то она развертывается из середины
+    TRect r1, r2;
+    r1 = Rect (Left + Width / 2, Top + Height / 2, Left + Width / 2,
+        Top + Height / 2);
+    r2 = BoundsRect;
+    DrawAnimatedRects (Handle, IDANI_CAPTION, &r1, &r2);
+    // Как сделать на кнопке многострочную надпись?
+    // SetWindowLong (BitBtn1 -> Handle,GWL_STYLE,GetWindowLong (Button1 -> Handle,GWL_STYLE)|BS_MULTILINE);
+    // BitBtn1 -> Caption="a\nlot\nof\nstrings";
+
+}
+
+
+void __fastcall TNK_3Form::BitBtn2Click (TObject *Sender)
+{ // передача данных в Excel
+    str_grid (StringGrid1);
+}
+
+
+void __fastcall TNK_3Form::RadioGroup1Click (TObject *Sender) {
+    // уменьшение формы
+    if (NK_3Form -> Height > 120)
+        Form_Min ();
+}
+
+
+void __fastcall TNK_3Form::BitBtn3Click (TObject *Sender)
+{ // Показать по специальностям
+    CheckBox1 -> Visible = true;
+
+    if (CheckBox1 -> Checked)
+        NK_3Form -> Caption = "Распределение студентов по специальностям и полу";
+    else
+        NK_3Form -> Caption = "Распределение студентов по специальностям";
+    // очищение содержимого   StringGrid
+    if (!Clear_StringGrid ())
+        return;
+    ////////
+    q1 = DataModule1 -> Vozrast3NKFDQuery;
+    switch (RadioGroup2 -> ItemIndex) { // switch выбор по критериям
+    case 0: // по факультету
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), s.spec, s.code_spec, pol from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  s.spec, pol, s.code_spec";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), s.spec, s.code_spec from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  s.spec, s.code_spec";
+        } // end else отключен выбор по полу
+        break;
+    case 1: // по курсам
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), s.spec, kurs, pol from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  kurs, s.spec, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), s.spec, kurs from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  kurs, s.spec";
+        } // end else отключен выбор по полу
+        break;
+    } // end switch выбор по критериям
+
+    // Открываем Query в зависимости от выбранного
+    q1 -> Close ();
+    q1 -> SQL -> Clear ();
+    q1 -> SQL -> Add (sql_text + sql_group_by);
+    q1 -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    q1 -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+    q1 -> Open ();
+    int rec_z = q1 -> RecordCount;
+
+    StringGrid1 -> RowCount = rec_z + 2;
+    if (CheckBox1 -> Checked) {
+        StringGrid1 -> ColCount = 4;
+        StringGrid1 -> Cells[3][0] = "Пол";
+    }
+    else
+        StringGrid1 -> ColCount = 3;
+
+    if (RadioGroup2 -> ItemIndex)
+        StringGrid1 -> Cells[0][0] = "Курс";
+    else
+        StringGrid1 -> Cells[0][0] = "Код";
+    StringGrid1 -> Cells[1][0] = "Специальность";
+    StringGrid1 -> ColWidths[1] = 230;
+    StringGrid1 -> Cells[2][0] = "Кол-во";
+
+    for (int k = 1; k <= rec_z; k++) { // for по количеству записей в Query
+
+        // если включен выбор по курсам, то заносим курс
+        if (RadioGroup2 -> ItemIndex)
+            StringGrid1 -> Cells[0][k] =
+                AnsiString (q1 -> FieldByName ("KURS") -> AsString) + " курс";
+        else
+            StringGrid1 -> Cells[0][k] = q1 -> FieldByName ("CODE_SPEC") -> AsString;
+        // если включен выбор по полу
+        if (CheckBox1 -> Checked)
+            StringGrid1 -> Cells[3][k] = q1 -> FieldByName ("POL") -> AsString;
+        // занесение направления специальности
+        StringGrid1 -> Cells[1][k] = q1 -> FieldByName ("SPEC") -> AsString;
+
+        // занесение количества студентов
+        StringGrid1 -> Cells[2][k] =
+            AnsiString (q1 -> FieldByName ("COUNT") -> AsString);
+        q1 -> Next ();
+    } // end for по количеству записей в Query
+
+    int sum = 0;
+    // Подбить сумму по столбцам ВСЕГО
+    for (int g = 1; g < StringGrid1 -> RowCount - 1; g++) { // for ВСЕГО
+        sum += StrToInt (StringGrid1 -> Cells[2][g]);
+    } // end for ВСЕГО
+
+    StringGrid1 -> Cells[1][StringGrid1 -> RowCount - 1] = "ВСЕГО:";
+    // занесение суммы в последней строке
+    StringGrid1 -> Cells[2][StringGrid1 -> RowCount - 1] = AnsiString (sum);
+
+    // Увеличение формы
+    Form_Max ();
+}
+
+
+void __fastcall TNK_3Form::CheckBox1Click (TObject *Sender) {
+    // с учетом выбора пола
+    if (NK_3Form -> Caption == "Распределение студентов по специальностям" ||
+        NK_3Form -> Caption == "Распределение студентов по специальностям и полу")
+        BitBtn3Click (this);
+
+    if (NK_3Form -> Caption == "Распределение студентов по форме оплаты" ||
+        NK_3Form -> Caption == "Распределение студентов по форме оплаты и полу")
+        BitBtn4Click (this);
+
+    if (NK_3Form -> Caption == "Распределение выпускников по специальностям" ||
+        NK_3Form -> Caption ==
+        "Распределение выпускников по специальностям и полу")
+        BitBtn5Click (this);
+
+    if (NK_3Form -> Caption == "На условиях целевой подготовки" ||
+        NK_3Form -> Caption == "На условиях целевой подготовки с учетом пола")
+        BitBtn6Click (this);
+
+    if (NK_3Form -> Caption == "По сокращенному сроку обучения" ||
+        NK_3Form -> Caption == "По сокращенному сроку обучения с учетом пола")
+        BitBtn7Click (this);
+
+    if (NK_3Form -> Caption ==
+        "Распределение студентов по направлениям специальностей" ||
+        NK_3Form -> Caption ==
+        "Распределение студентов по направлениям специальностей и полу")
+        BitBtn8Click (this);
+
+}
+
+
+void __fastcall TNK_3Form::BitBtn4Click (TObject *Sender)
+{ // Показать по форме оплаты
+    CheckBox1 -> Visible = true;
+
+    if (CheckBox1 -> Checked)
+        NK_3Form -> Caption = "Распределение студентов по форме оплаты и полу";
+    else
+        NK_3Form -> Caption = "Распределение студентов по форме оплаты";
+
+    // очищение содержимого   StringGrid
+    if (!Clear_StringGrid ())
+        return;
+    ////////
+    q1 = DataModule1 -> Vozrast3NKFDQuery;
+
+    switch (RadioGroup2 -> ItemIndex) { // switch выбор по критериям
+    case 0: // по факультету
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), f.vid_found, pol from people  p  \
+                           inner join foundation f on (p.n_found=f.n_found) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  f.vid_found, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), f.vid_found from people  p  \
+                           inner join foundation f on (p.n_found=f.n_found) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  f.vid_found";
+        } // end else отключен выбор по полу
+        break;
+    case 1: // по курсам
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), kurs, f.vid_found, pol from people  p  \
+                           inner join foundation f on (p.n_found=f.n_found) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  kurs, f.vid_found, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), kurs, f.vid_found  from people  p  \
+                           inner join foundation f on (p.n_found=f.n_found) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  kurs, f.vid_found";
+        } // end else отключен выбор по полу
+        break;
+    } // end switch выбор по критериям
+
+    // Открываем Query в зависимости от выбранного
+    q1 -> Close ();
+    q1 -> SQL -> Clear ();
+    q1 -> SQL -> Add (sql_text + sql_group_by);
+    q1 -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    q1 -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+    q1 -> Open ();
+    int rec_z = q1 -> RecordCount;
+
+    StringGrid1 -> RowCount = rec_z + 2;
+    if (CheckBox1 -> Checked) {
+        StringGrid1 -> ColCount = 4;
+        StringGrid1 -> Cells[3][0] = "Пол";
+    }
+    else
+        StringGrid1 -> ColCount = 3;
+
+    if (RadioGroup2 -> ItemIndex)
+        StringGrid1 -> Cells[0][0] = "Курс";
+    StringGrid1 -> Cells[1][0] = "Форма";
+    StringGrid1 -> ColWidths[1] = 64;
+    StringGrid1 -> Cells[2][0] = "Кол-во";
+
+    for (int k = 1; k <= rec_z; k++) { // for по количеству записей в Query
+
+        // если включен выбор по курсам, то заносим курс
+        if (RadioGroup2 -> ItemIndex)
+            StringGrid1 -> Cells[0][k] =
+                AnsiString (q1 -> FieldByName ("KURS") -> AsString) + " курс";
+        // если включен выбор по полу
+        if (CheckBox1 -> Checked)
+            StringGrid1 -> Cells[3][k] = q1 -> FieldByName ("POL") -> AsString;
+        // занесение формы оплаты
+        StringGrid1 -> Cells[1][k] = q1 -> FieldByName ("VID_FOUND") -> AsString;
+
+        // занесение количества студентов
+        StringGrid1 -> Cells[2][k] =
+            AnsiString (q1 -> FieldByName ("COUNT") -> AsString);
+        q1 -> Next ();
+    } // end for по количеству записей в Query
+
+    int sum = 0;
+    // Подбить сумму по столбцам ВСЕГО
+    for (int g = 1; g < StringGrid1 -> RowCount - 1; g++) { // for ВСЕГО
+        sum += StrToInt (StringGrid1 -> Cells[2][g]);
+    } // end for ВСЕГО
+
+    StringGrid1 -> Cells[1][StringGrid1 -> RowCount - 1] = "ВСЕГО:";
+    // занесение суммы в последней строке
+    StringGrid1 -> Cells[2][StringGrid1 -> RowCount - 1] = AnsiString (sum);
+
+    // Увеличение формы
+    Form_Max ();
+
+}
+
+
+void __fastcall TNK_3Form::BitBtn5Click (TObject *Sender)
+{ // Показать по выпускникам
+    CheckBox1 -> Visible = true;
+
+    if (CheckBox1 -> Checked)
+        NK_3Form -> Caption =
+            "Распределение выпускников по специальностям и полу";
+    else
+        NK_3Form -> Caption = "Распределение выпускников по специальностям";
+
+    // очищение содержимого   StringGrid
+    if (!Clear_StringGrid ())
+        return;
+    ////////
+    q1 = DataModule1 -> Vozrast3NKFDQuery;
+    // ------
+    switch (RadioGroup2 -> ItemIndex) { // switch выбор по критериям
+    case 0: // по факультету
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), s.spec, pol, s.code_spec from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=6 \
+                           and p.D_PRIKAZ_KURS like '%" +
+                AnsiString (uch_god) + "' ";
+            sql_group_by = " group by  s.spec, pol, s.code_spec";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), s.spec, s.code_spec from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=6 \
+                           and p.D_PRIKAZ_KURS like '%" +
+                AnsiString (uch_god) + "' ";
+            sql_group_by = " group by  s.spec, s.code_spec";
+        } // end else отключен выбор по полу
+        break;
+    case 1: // по курсам
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), s.spec, kurs, pol from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=6 \
+                           and p.D_PRIKAZ_KURS like '%" +
+                AnsiString (uch_god) + "' ";
+            sql_group_by = " group by  kurs, s.spec, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), s.spec, kurs from people  p  \
+                           inner join speciality s on (p.n_spec=s.n_spec) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=6 \
+                           and p.D_PRIKAZ_KURS like '%" +
+                AnsiString (uch_god) + "' ";
+            sql_group_by = " group by  kurs, s.spec";
+        } // end else отключен выбор по полу
+        break;
+    } // end switch выбор по критериям
+
+    // Открываем Query в зависимости от выбранного
+    q1 -> Close ();
+    q1 -> SQL -> Clear ();
+    q1 -> SQL -> Add (sql_text + sql_group_by);
+    q1 -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    q1 -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+    q1 -> Open ();
+    int rec_z = q1 -> RecordCount;
+
+    StringGrid1 -> RowCount = rec_z + 2;
+    if (CheckBox1 -> Checked) {
+        StringGrid1 -> ColCount = 4;
+        StringGrid1 -> Cells[3][0] = "Пол";
+    }
+    else
+        StringGrid1 -> ColCount = 3;
+
+    if (RadioGroup2 -> ItemIndex)
+        StringGrid1 -> Cells[0][0] = "Курс";
+    else
+        StringGrid1 -> Cells[0][0] = "Код";
+    StringGrid1 -> Cells[1][0] = "Специальность";
+    StringGrid1 -> ColWidths[1] = 230;
+    StringGrid1 -> Cells[2][0] = AnsiString (uch_god) + "-выпуск";
+
+    for (int k = 1; k <= rec_z; k++) { // for по количеству записей в Query
+
+        // если включен выбор по курсам, то заносим курс
+        if (RadioGroup2 -> ItemIndex)
+            StringGrid1 -> Cells[0][k] =
+                AnsiString (q1 -> FieldByName ("KURS") -> AsString) + " курс";
+        else
+            StringGrid1 -> Cells[0][k] = q1 -> FieldByName ("CODE_SPEC") -> AsString;
+        // если включен выбор по полу
+        if (CheckBox1 -> Checked)
+            StringGrid1 -> Cells[3][k] = q1 -> FieldByName ("POL") -> AsString;
+        // занесение направления специальности
+        StringGrid1 -> Cells[1][k] = q1 -> FieldByName ("SPEC") -> AsString;
+
+        // занесение количества студентов
+        StringGrid1 -> Cells[2][k] =
+            AnsiString (q1 -> FieldByName ("COUNT") -> AsString);
+        q1 -> Next ();
+    } // end for по количеству записей в Query
+
+    int sum = 0;
+    // Подбить сумму по столбцам ВСЕГО
+    for (int g = 1; g < StringGrid1 -> RowCount - 1; g++) { // for ВСЕГО
+        sum += StrToInt (StringGrid1 -> Cells[2][g]);
+    } // end for ВСЕГО
+
+    StringGrid1 -> Cells[1][StringGrid1 -> RowCount - 1] = "ВСЕГО:";
+    // занесение суммы в последней строке
+    StringGrid1 -> Cells[2][StringGrid1 -> RowCount - 1] = AnsiString (sum);
+
+    // Увеличение формы
+    Form_Max ();
+}
+
+
+void __fastcall TNK_3Form::BitBtn6Click (TObject *Sender)
+{ // Показать На условиях целевой подготовки
+    CheckBox1 -> Visible = true;
+
+    if (CheckBox1 -> Checked)
+        NK_3Form -> Caption = "На условиях целевой подготовки с учетом пола";
+    else
+        NK_3Form -> Caption = "На условиях целевой подготовки";
+
+    // очищение содержимого   StringGrid
+    if (!Clear_StringGrid ())
+        return;
+
+    // ------
+    switch (RadioGroup2 -> ItemIndex) { // switch выбор по критериям
+    case 0: // по факультету
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), pol from people  p  \
+                           INNER JOIN CK  ON (P.NOMER = CK.NOMER) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.n_found_include=1 \
+                           and p.n_found=6 \
+                           and p.n_specializ=ck.n_specializ  \
+                           and CK.STATUS_CK=0 ";
+            sql_group_by = " group by  pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*) from people  p  \
+                           INNER JOIN CK  ON (P.NOMER = CK.NOMER) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.n_found_include=1 \
+                           and p.n_found=6 \
+                           and p.n_specializ=ck.n_specializ  \
+                           and CK.STATUS_CK=0 ";
+            sql_group_by = " ";
+        } // end else отключен выбор по полу
+        break;
+    case 1: // по курсам
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), kurs, pol from people  p  \
+                           INNER JOIN CK  ON (P.NOMER = CK.NOMER) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.n_found_include=1 \
+                           and p.n_found=6 \
+                           and p.n_specializ=ck.n_specializ  \
+                           and CK.STATUS_CK=0 ";
+            sql_group_by = " group by  kurs, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), kurs from people  p  \
+                           INNER JOIN CK  ON (P.NOMER = CK.NOMER) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.n_found_include=1 \
+                           and p.n_found=6 \
+                           and p.n_specializ=ck.n_specializ  \
+                           and CK.STATUS_CK=0 ";
+            sql_group_by = " group by  kurs";
+        } // end else отключен выбор по полу
+        break;
+    } // end switch выбор по критериям
+    Create_StringGrid ();
+}
+
+
+void __fastcall TNK_3Form::BitBtn7Click (TObject *Sender)
+{ // Показать По сокращенному сроку обучения
+    CheckBox1 -> Visible = true;
+
+    if (CheckBox1 -> Checked)
+        NK_3Form -> Caption = "По сокращенному сроку обучения с учетом пола";
+    else
+        NK_3Form -> Caption = "По сокращенному сроку обучения";
+
+    // очищение содержимого   StringGrid
+    if (!Clear_StringGrid ())
+        return;
+
+    // ------
+    switch (RadioGroup2 -> ItemIndex) { // switch выбор по критериям
+    case 0: // по факультету
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text =
+                "select count (*), pol from people  p  \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.vid_edu=p.vid_edu_include  \
+                           and not exists (select res.nomer   from restore  res where res.nomer=p.nomer)  \
+                           and  not exists (select  h.nomer   from  holiday h   where h.nomer=p.nomer)  \
+                           and (p.n_found_include in (3,10,12,13,14,15) or p.n_found in (3,10,12,13,14,15))";
+            sql_group_by = " group by  pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text =
+                "select count (*) from people  p  \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.vid_edu=p.vid_edu_include  \
+                           and not exists (select res.nomer   from restore  res where res.nomer=p.nomer)  \
+                           and  not exists (select  h.nomer   from  holiday h   where h.nomer=p.nomer) \
+                           and (p.n_found_include in (3,10,12,13,14,15) or p.n_found in (3,10,12,13,14,15))";
+            sql_group_by = " ";
+        } // end else отключен выбор по полу
+        break;
+    case 1: // по курсам
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text =
+                "select count (*), kurs, pol from people  p  \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.vid_edu=p.vid_edu_include  \
+                           and not exists (select res.nomer   from restore  res where res.nomer=p.nomer)  \
+                           and  not exists (select  h.nomer   from  holiday h   where h.nomer=p.nomer)  \
+                           and (p.n_found_include in (3,10,12,13,14,15) or p.n_found in (3,10,12,13,14,15))";
+            sql_group_by = " group by  kurs, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text =
+                "select count (*), kurs from people  p  \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people=1 \
+                           and p.vid_edu=p.vid_edu_include  \
+                           and not exists (select res.nomer   from restore  res where res.nomer=p.nomer)  \
+                           and  not exists (select  h.nomer   from  holiday h   where h.nomer=p.nomer)  \
+                           and (p.n_found_include in (3,10,12,13,14,15) or p.n_found in (3,10,12,13,14,15))";
+            sql_group_by = " group by  kurs";
+        } // end else отключен выбор по полу
+        break;
+    } // end switch выбор по критериям
+
+    Create_StringGrid ();
+
+}
+
+
+void __fastcall TNK_3Form::BitBtn8Click (TObject *Sender)
+{ // Показать по направлениям специальностей
+    CheckBox1 -> Visible = true;
+
+    if (CheckBox1 -> Checked)
+        NK_3Form -> Caption =
+            "Распределение студентов по направлениям специальностей и полу";
+    else
+        NK_3Form -> Caption =
+            "Распределение студентов по направлениям специальностей";
+    // очищение содержимого   StringGrid
+    if (!Clear_StringGrid ())
+        return;
+    ////////
+    q1 = DataModule1 -> Vozrast3NKFDQuery;
+    switch (RadioGroup2 -> ItemIndex) { // switch выбор по критериям
+    case 0: // по факультету
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), s_p.spec_dir_full, s_p.code_spec_dir, pol from people  p  \
+                           inner join specializ s on (p.n_specializ=s.n_specializ) \
+                           inner join special_direction s_p on (s_p.n_spec_dir=s.n_spec_dir) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by =
+                " group by  s_p.code_spec_dir, s_p.spec_dir_full, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), s_p.spec_dir_full, s_p.code_spec_dir from people  p  \
+                           inner join specializ s on (p.n_specializ=s.n_specializ) \
+                           inner join special_direction s_p on (s_p.n_spec_dir=s.n_spec_dir) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  s_p.code_spec_dir, s_p.spec_dir_full";
+        } // end else отключен выбор по полу
+        break;
+    case 1: // по курсам
+        if (CheckBox1 -> Checked) { // if выбрать с учетом пола
+            sql_text = "select count (*), s_p.spec_dir_full, kurs, pol from people  p  \
+                           inner join specializ s on (p.n_specializ=s.n_specializ) \
+                           inner join special_direction s_p on (s_p.n_spec_dir=s.n_spec_dir) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  kurs, s_p.spec_dir_full, pol";
+        } // end if выбрать с учетом пола
+        else { // else отключен выбор по полу
+            sql_text = "select count (*), s_p.spec_dir_full, kurs from people  p  \
+                           inner join specializ s on (p.n_specializ=s.n_specializ) \
+                           inner join special_direction s_p on (s_p.n_spec_dir=s.n_spec_dir) \
+                           where p.n_fac=:FAC \
+                           and   p.vid_edu=:EDU  \
+                           and p.status_people in (1,3) ";
+            sql_group_by = " group by  kurs, s_p.spec_dir_full";
+        } // end else отключен выбор по полу
+        break;
+    } // end switch выбор по критериям
+
+    // Открываем Query в зависимости от выбранного
+    q1 -> Close ();
+    q1 -> SQL -> Clear ();
+    q1 -> SQL -> Add (sql_text + sql_group_by);
+    q1 -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    q1 -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+    q1 -> Open ();
+    int rec_z = q1 -> RecordCount;
+
+    StringGrid1 -> RowCount = rec_z + 2;
+    if (CheckBox1 -> Checked) {
+        StringGrid1 -> ColCount = 4;
+        StringGrid1 -> Cells[3][0] = "Пол";
+    }
+    else
+        StringGrid1 -> ColCount = 3;
+
+    if (RadioGroup2 -> ItemIndex)
+        StringGrid1 -> Cells[0][0] = "Курс";
+    else
+        StringGrid1 -> Cells[0][0] = "Код";
+    StringGrid1 -> Cells[1][0] = "Направление специальности";
+    StringGrid1 -> ColWidths[1] = 430;
+    StringGrid1 -> Cells[2][0] = "Кол-во";
+
+    for (int k = 1; k <= rec_z; k++) { // for по количеству записей в Query
+
+        // если включен выбор по курсам, то заносим курс
+        if (RadioGroup2 -> ItemIndex)
+            StringGrid1 -> Cells[0][k] =
+                AnsiString (q1 -> FieldByName ("KURS") -> AsString) + " курс";
+        else
+            StringGrid1 -> Cells[0][k] =
+                q1 -> FieldByName ("CODE_SPEC_DIR") -> AsString;
+        // если включен выбор по полу
+        if (CheckBox1 -> Checked)
+            StringGrid1 -> Cells[3][k] = q1 -> FieldByName ("POL") -> AsString;
+        // занесение направления специальности
+        StringGrid1 -> Cells[1][k] = q1 -> FieldByName ("SPEC_DIR_FULL") -> AsString;
+
+        // занесение количества студентов
+        StringGrid1 -> Cells[2][k] =
+            AnsiString (q1 -> FieldByName ("COUNT") -> AsString);
+        q1 -> Next ();
+    } // end for по количеству записей в Query
+
+    int sum = 0;
+    // Подбить сумму по столбцам ВСЕГО
+    for (int g = 1; g < StringGrid1 -> RowCount - 1; g++) { // for ВСЕГО
+        sum += StrToInt (StringGrid1 -> Cells[2][g]);
+    } // end for ВСЕГО
+
+    StringGrid1 -> Cells[1][StringGrid1 -> RowCount - 1] = "ВСЕГО:";
+    // занесение суммы в последней строке
+    StringGrid1 -> Cells[2][StringGrid1 -> RowCount - 1] = AnsiString (sum);
+
+    // Увеличение формы
+    Form_Max ();
+}
+

@@ -1,0 +1,785 @@
+#include <vcl.h>
+#pragma hdrstop
+
+
+#include <comobj.hpp>
+#include "DataModule.h"
+#include "DM2Unit.h"
+#include "Result_RatingUnit.h"
+
+
+#pragma package (smart_init)
+#pragma resource "*.dfm"
+
+
+TResult_RatingForm * Result_RatingForm;
+
+
+AnsiString s_r = "                                                              \
+    SELECT                                                                      \
+        Rating.N_RATING,                                                        \
+        Rating.N_VED_RATING,                                                    \
+        Rating.NOMER,                                                           \
+        Rating.BALL_R,                                                          \
+        Rating.R_FAC,                                                           \
+        Rating.R_KURS,                                                          \
+        Rating.R_GROUP,                                                         \
+        Rating.R_DOP,                                                           \
+        People.FAM,                                                             \
+        People.NAME,                                                            \
+        People.OTCH,                                                            \
+        Vedomost_rating.N_VEDOMOST_R,                                           \
+        Vedomost_rating.N_FAC,                                                  \
+        Vedomost_rating.VID_EDU,                                                \
+        Vedomost_rating.UCH_GOD,                                                \
+        Vedomost_rating.SEMESTR,                                                \
+        Vedomost_rating.SESSION,                                                \
+        Vedomost_rating.INC_GROUP,                                              \
+        Vedomost_rating.N_SPECIALIZ,                                            \
+        Specializ.SPECIAL,                                                      \
+        Increment_group.N_GROUP,                                                \
+        People.FAM|| ' ' || People.NAME || ' ' || People.OTCH as FIO            \
+    FROM                                                                        \
+        RATING Rating                                                           \
+            INNER JOIN                                                          \
+                PEOPLE People                                                   \
+                    ON                                                          \
+                        (Rating.NOMER = People.NOMER)                           \
+            INNER JOIN                                                          \
+                VEDOMOST_RATING Vedomost_rating                                 \
+                    ON                                                          \
+                        (Rating.N_VED_RATING = Vedomost_rating.N_VED_RATING)    \
+            INNER JOIN                                                          \
+                SPECIALIZ Specializ                                             \
+                    ON                                                          \
+                        (Vedomost_rating.N_SPECIALIZ = Specializ.N_SPECIALIZ)   \
+            INNER JOIN                                                          \
+                INCREMENT_GROUP Increment_group                                 \
+                    ON                                                          \
+                        (Vedomost_rating.INC_GROUP = Increment_group.INC_GROUP) \
+    WHERE                                                                       \
+            Vedomost_rating.N_FAC   = :FAC                                      \
+        AND                                                                     \
+            Vedomost_rating.UCH_GOD = :GOD                                      \
+        AND                                                                     \
+            Vedomost_rating.VID_EDU = :EDU                                      \
+        AND                                                                     \
+            Vedomost_rating.SESSION = :SES                                      \
+    ";
+
+AnsiString s_f = "                                                              \
+    ORDER BY                                                                    \
+        Rating.BALL_R DESC,                                                     \
+        People.FAM,                                                             \
+        People.NAME,                                                            \
+        People.OTCH                                                             \
+    ";
+
+AnsiString s_k = "                                                              \
+    ORDER BY                                                                    \
+        Vedomost_rating.SEMESTR,                                                \
+        Rating.BALL_R DESC,                                                     \
+        People.FAM,                                                             \
+        People.NAME,                                                            \
+        People.OTCH                                                             \
+    ";
+
+AnsiString s_gr = "                                                             \
+    ORDER BY                                                                    \
+        Increment_group.N_GROUP,                                                \
+        Rating.BALL_R DESC,                                                     \
+        People.FAM,                                                             \
+        People.NAME,                                                            \
+        People.OTCH                                                             \
+    ";
+
+
+int rec_rat;                                                                    // переменная для определения количества записей
+
+
+__fastcall TResult_RatingForm::TResult_RatingForm (TComponent* Owner)
+    : TForm (Owner) {
+}
+
+
+
+
+
+// ApplicationEvents1Message
+// BitBtn1Click
+// BitBtn2Click
+// DBGrid1TitleClick
+// Edit1Change
+// Edit1KeyPress
+// ExAutoFit
+// ExBorder
+// ExSave
+// ExShapka
+// FormActivate
+// FormClose
+// Open_SQL
+// Save_Rat
+// SpeedButton1Click
+// toEx (AnsiString)
+// toEx (Variant)
+
+
+
+
+
+
+
+
+
+int __fastcall TResult_RatingForm::Open_SQL (AnsiString text_sql)               // процедура открытия Query
+{
+
+    DataModule1 -> Rating_BallFDQuery -> Close ();
+    DataModule1 -> Rating_BallFDQuery -> SQL -> Clear ();
+    DataModule1 -> Rating_BallFDQuery -> SQL -> Add (text_sql);
+
+    DataModule1 -> Rating_BallFDQuery ->
+        ParamByName ("FAC") -> AsSmallInt =
+                nom_fac;
+
+    DataModule1 -> Rating_BallFDQuery ->
+        ParamByName ("GOD") -> AsSmallInt =
+                StrToInt (Edit2 -> Text);
+
+    DataModule1 -> Rating_BallFDQuery ->
+        ParamByName ("EDU") -> AsSmallInt =
+                RadioGroup1 -> ItemIndex;
+
+    DataModule1 -> Rating_BallFDQuery ->
+        ParamByName ("SES") -> AsSmallInt =
+                StrToInt (Edit1 -> Text);
+
+    DataModule1 -> Rating_BallFDQuery -> Open ();
+
+    return DataModule1 -> Rating_BallFDQuery -> RecordCount;
+}
+
+
+void __fastcall TResult_RatingForm::toEx (                                      // функция занесения данных в Excel
+        int        Row,
+        int        Column,
+        AnsiString data
+    )
+{
+    try
+    {
+        Variant cur =
+            Sh
+            .OlePropertyGet (
+                "Cells",
+                Row,
+                Column
+            );
+
+        cur.OlePropertySet (
+            "Value",
+            data.c_str ()
+        );
+    }
+    catch (...)
+    {
+        ShowMessage (
+            "Не удалось создать Excel файл.\n
+            Проверьте фоновые процессы!"
+        );
+    }
+}
+
+
+void __fastcall TResult_RatingForm::toEx (                                      // функция занесения данных в Excel
+        int     Row,
+        int     Column,
+        Variant data
+    )
+{
+    try
+    {
+        Variant cur =
+            Sh
+            .OlePropertyGet (
+                "Cells",
+                Row,
+                Column
+            );
+
+        cur.OlePropertySet (
+            "Value",
+            data
+        );
+    }
+    catch (...)
+    {
+        ShowMessage (
+            "Не удалось создать Excel файл.\n
+            Проверьте фоновые процессы!"
+        );
+    }
+}
+
+
+void __fastcall TResult_RatingForm::ExAutoFit (                                 // процедура установки автоматической ширины столбца
+        int one,
+        int two
+    )
+{
+    for ( int i =  one;
+              i <= two;
+              ++i
+        )
+        Sh
+        .OlePropertyGet ("Columns")
+        .OlePropertyGet (
+            "Item",
+            i
+        )
+        .OleProcedure ("AutoFit");
+}
+
+
+void __fastcall TResult_RatingForm::Save_Rat (                                  // процедура сохранения рейтинга
+        int par,                                                                // 1 - по группе, 2 - по курсу, 3 - по факультету
+        int rating                                                              // райтинг по критерию
+    )
+{
+    DataModule1 -> Rating_BallFDQuery -> Edit ();
+
+    switch (par)
+    {
+        case 1:
+                DataModule1 ->
+                    Rating_BallFDQueryR_GROUP ->
+                        Value =
+                            rating;
+            break;
+        case 2:
+                DataModule1 ->
+                    Rating_BallFDQueryR_KURS  ->
+                        Value =
+                            rating;
+            break;
+        case 3:
+                DataModule1 ->
+                    Rating_BallFDQueryR_FAC   ->
+                        Value =
+                            rating;
+            break;
+    }
+
+    DataModule1 -> Rating_BallFDQuery -> Post ();
+}
+
+
+void __fastcall TResult_RatingForm::ExShapka (                                  // процедура создания шапочки таблицы
+        int        stroka,
+        AnsiString text_zag,
+        int        stat                                                         // если 0 - сокращенная шапка ; 1 - полная
+    )
+{
+    Variant range;
+    AnsiString diap; // диапазон
+    // Заголовок
+    toEx (stroka, 1, AnsiString (text_zag));
+
+    if (stat) { // 1 - полная
+        diap = "A" + AnsiString (stroka) + ":G" + AnsiString (stroka);
+        range = App.OlePropertyGet ("Range", diap.c_str ());
+
+    }
+    else { // 0 - сокращенная шапка
+        diap = "A" + AnsiString (stroka) + ":E" + AnsiString (stroka);
+        range = App.OlePropertyGet ("Range", diap.c_str ());
+
+    }
+
+    // объединение ячеек
+    range.OleFunction ("Merge");
+    // установка шрифта
+    range.OlePropertyGet ("Font").OlePropertySet ("Name", "Arial");
+    range.OlePropertyGet ("Font").OlePropertySet ("Size", 14);
+    range.OlePropertyGet ("Font").OlePropertySet ("Bold", True);
+
+    stroka++;
+    // создаем шапочку таблицы Row,Column
+    toEx (stroka, 1, AnsiString ("№ п/п"));
+    toEx (stroka, 2, AnsiString ("ФИО"));
+    toEx (stroka, 3, AnsiString ("№ группы"));
+    toEx (stroka, 4, AnsiString ("Балл"));
+    if (stat) { // if  полная
+        toEx (stroka, 5, AnsiString ("Рейтинг по факультету"));
+        toEx (stroka, 6, AnsiString ("Рейтинг по курсу"));
+        toEx (stroka, 7, AnsiString ("Рейтинг по группе"));
+        diap = "A" + AnsiString (stroka) + ":G" + AnsiString (stroka);
+        range = App.OlePropertyGet ("Range", diap.c_str ());
+    } // end if  полная
+    else { // else  сокращенная шапка
+        toEx (stroka, 5, AnsiString ("Рейтинг"));
+        diap = "A" + AnsiString (stroka) + ":E" + AnsiString (stroka);
+        range = App.OlePropertyGet ("Range", diap.c_str ());
+    } // end else  сокращенная шапка
+
+    // обрамление
+
+    for (int i = 1; i <= 4; i++) { // for обрамление
+        range.OlePropertyGet ("Borders").OlePropertyGet ("Item", i).OlePropertySet
+            ("LineStyle", 1);
+    } // end for обрамление
+
+    for (int i = 1; i <= 7; i++)
+    { // for  выбавниваем данные в ячейках шапочки таблицы
+        Sh.OlePropertyGet ("Cells", stroka, i).OlePropertySet
+            ("HorizontalAlignment", 3);
+    } // end for
+
+}
+
+
+void __fastcall TResult_RatingForm::ExBorder (int strok, int st)
+{ // функция обрамления
+    Variant range;
+    AnsiString diap; // диапазон
+
+    if (st) { // 1 - полная
+        diap = "A" + AnsiString (strok) + ":G" + AnsiString (strok);
+        range = App.OlePropertyGet ("Range", diap.c_str ());
+    }
+    else { // 0 - сокращенная шапка
+        diap = "A" + AnsiString (strok) + ":E" + AnsiString (strok);
+        range = App.OlePropertyGet ("Range", diap.c_str ());
+    }
+
+    for (int i = 1; i <= 4; i++) { // for обрамление
+        range.OlePropertyGet ("Borders").OlePropertyGet ("Item", i).OlePropertySet
+            ("LineStyle", 1);
+    } // end for обрамление
+}
+
+
+void __fastcall TResult_RatingForm::ExSave (int par) { // функция сохранения
+    // int par  1 - по группе, 2 - по курсу, 3 - по факультету
+
+    AnsiString name_f = "d:\\Мои документы\\Рейтинг " +
+        DM2 -> FacultyFDTable -> Lookup ("N_FAC", nom_fac, "FAC1");
+
+    switch (par) { // switch
+
+    case 1:
+        name_f += " по группам за ";
+        break;
+    case 2:
+        name_f += " по курсам за ";
+        break;
+    case 3:
+        name_f += " по факультету за ";
+        break;
+    } // end switch
+
+    // текущая дата
+    curent_date = cur_d ();
+
+    name_f += DateToStr (curent_date) + ".xls"; ;
+
+    App.OlePropertyGet ("WorkBooks", 1).OleProcedure ("SaveAs", name_f.c_str ());
+
+}
+
+
+void __fastcall TResult_RatingForm::FormClose (TObject *Sender,
+    TCloseAction &Action) {
+    Action = caFree;
+}
+
+
+void __fastcall TResult_RatingForm::FormActivate (TObject *Sender) {
+
+    // показ формы
+    Result_RatingForm -> Height = 133;
+    Panel2 -> Visible = false;
+    Panel3 -> Visible = false;
+
+    Edit2 -> Text = uch_god;
+    Edit3 -> Text = uch_god + 1;
+
+}
+
+
+void __fastcall TResult_RatingForm::BitBtn1Click (TObject *Sender)
+{ // кнопка РАССЧИТАТЬ
+
+    Edit1Change (this);
+    // Проверки
+    if (Edit1 -> Text == "") { // if  Полугодие
+        ShowMessage ("Введите полугодие 1 или 2!");
+        return;
+    } // end if  Полугодие
+    else { // else не пустое
+        if (Edit1 -> Text != "1" && Edit1 -> Text != "2")
+        { // if проверка на правильный ввод
+            ShowMessage ("Полугодие должно быть 1 или 2!");
+            Edit1 -> Text = "";
+            Edit1 -> SetFocus ();
+            return;
+        } // end if проверка на правильный ввод
+    } // end else не пустое
+
+    if (Edit2 -> Text == "") { // if Учебный год
+        ShowMessage ("Введите Учебный год!");
+        return;
+    } // end if Учебный год
+
+    // ----------------------
+
+    rec_rat = Open_SQL (s_r + s_gr);
+
+    if (!rec_rat) { // if нет записей
+        ShowMessage ("Нет записей!");
+        return;
+    } // end if нет записей
+
+    // ----------------ОСНОВНАЯ ЧАСТЬ
+    int rat; // первоначальное место
+    int str; // номер строки
+    int np; // номер п/п
+    int ball; // набранный балл
+
+    AnsiString zag = ""; // название каждого листа
+
+    // ---По группе
+
+    AnsiString gr_rat;
+    DataModule1 -> ExelInit ();
+    // записываем в Excel данные
+    while (!DataModule1 -> Rating_BallFDQuery -> Eof) { // while !Eof
+        // добавить лист
+        str = 2; // номер строки
+        np = 1; // номер п/п
+        gr_rat = DataModule1 -> Rating_BallFDQueryN_GROUP -> Value;
+        App.OlePropertyGet ("WorkSheets").OleProcedure ("add");
+        Sh = App.OlePropertyGet ("ActiveSheet");
+        AnsiString n_list = "Группа " + gr_rat;
+        Sh.OlePropertySet ("Name", n_list.c_str ());
+        zag = "РЕЙТИНГ СТУДЕНТОВ ПО ГРУППЕ № " + gr_rat;
+        ExShapka (str, zag, 0);
+        rat = 1; // первоначальное место
+        ball = DataModule1 -> Rating_BallFDQueryBALL_R -> Value;
+        str += 2;
+
+        while (gr_rat == DataModule1 -> Rating_BallFDQueryN_GROUP -> Value &&
+            !DataModule1 -> Rating_BallFDQuery -> Eof) { // while sem  && !Eof
+            toEx (str, 1, Variant (np));
+            toEx (str, 2, AnsiString (DataModule1 -> Rating_BallFDQueryFIO -> Value));
+            // формат ячейки текстовый
+            Sh.OlePropertyGet ("Cells", str, 3).OlePropertySet
+                ("NumberFormat", "@");
+
+            toEx (str, 3,
+                AnsiString (DataModule1 -> Rating_BallFDQueryN_GROUP -> Value));
+            Sh.OlePropertyGet ("Cells", str, 3).OlePropertySet
+                ("HorizontalAlignment", 3);
+
+            toEx (str, 4, Variant (DataModule1 -> Rating_BallFDQueryBALL_R -> Value));
+            Sh.OlePropertyGet ("Cells", str, 4).OlePropertySet
+                ("HorizontalAlignment", 3);
+
+            if (ball != DataModule1 -> Rating_BallFDQueryBALL_R -> Value)
+            { // if ball не такой же
+                ball = DataModule1 -> Rating_BallFDQueryBALL_R -> Value;
+                rat++;
+            } // end if ball не такой же
+
+            toEx (str, 5, Variant (rat));
+            Sh.OlePropertyGet ("Cells", str, 5).OlePropertySet
+                ("HorizontalAlignment", 3);
+            Save_Rat (1, rat);
+            ExBorder (str, 0);
+
+            DataModule1 -> Rating_BallFDQuery -> Next ();
+
+            str++;
+            np++;
+        } // end while sem  && !Eof
+
+        // FormulaR1C1 = "=AVERAGE (R[-157]C:R[-1]C)"
+
+        // Расчет среднего значения
+        toEx (str, 2, AnsiString ("Средний балл по группе:"));
+        App.OlePropertyGet ("Cells", str, 4).OlePropertySet ("FormulaR1C1",
+            ("=СРЗНАЧ (R[-" + AnsiString (str - 4) + "]C:R[-1]C)").c_str ());
+
+        ExAutoFit (1, 5);
+    } // end while !Eof
+    DataModule1 -> Rating_BallFDQuery -> ApplyUpdates ();
+    ExSave (1);
+    // ---end По группе
+
+    // ---По курсу
+    rec_rat = Open_SQL (s_r + s_k);
+    int sem;
+    DataModule1 -> ExelInit ();
+
+    // записываем в Excel данные
+    while (!DataModule1 -> Rating_BallFDQuery -> Eof) { // while !Eof
+        // добавить лист
+
+        str = 2; // номер строки
+        np = 1; // номер п/п
+
+        sem = DataModule1 -> Rating_BallFDQuerySEMESTR -> Value;
+
+        App.OlePropertyGet ("WorkSheets").OleProcedure ("add");
+        Sh = App.OlePropertyGet ("ActiveSheet");
+
+        div_t kurs;
+        kurs = div (sem + 1, 2);
+
+        AnsiString k_list = "Курс " + AnsiString (kurs.quot);
+        Sh.OlePropertySet ("Name", k_list.c_str ());
+
+        zag = "РЕЙТИНГ СТУДЕНТОВ ПО " + AnsiString (kurs.quot) + " КУРСУ";
+        ExShapka (str, zag, 0);
+        rat = 1; // первоначальное место
+        ball = DataModule1 -> Rating_BallFDQueryBALL_R -> Value;
+        str += 2;
+
+        while (sem == DataModule1 -> Rating_BallFDQuerySEMESTR -> Value &&
+            !DataModule1 -> Rating_BallFDQuery -> Eof) { // while sem  && !Eof
+            toEx (str, 1, Variant (np));
+            toEx (str, 2, AnsiString (DataModule1 -> Rating_BallFDQueryFIO -> Value));
+            // формат ячейки текстовый
+            Sh.OlePropertyGet ("Cells", str, 3).OlePropertySet
+                ("NumberFormat", "@");
+
+            toEx (str, 3,
+                AnsiString (DataModule1 -> Rating_BallFDQueryN_GROUP -> Value));
+            Sh.OlePropertyGet ("Cells", str, 3).OlePropertySet
+                ("HorizontalAlignment", 3);
+            toEx (str, 4, Variant (DataModule1 -> Rating_BallFDQueryBALL_R -> Value));
+            Sh.OlePropertyGet ("Cells", str, 4).OlePropertySet
+                ("HorizontalAlignment", 3);
+
+            if (ball != DataModule1 -> Rating_BallFDQueryBALL_R -> Value)
+            { // if ball не такой же
+                ball = DataModule1 -> Rating_BallFDQueryBALL_R -> Value;
+                rat++;
+            } // end if ball не такой же
+
+            toEx (str, 5, Variant (rat));
+            Sh.OlePropertyGet ("Cells", str, 5).OlePropertySet
+                ("HorizontalAlignment", 3);
+            Save_Rat (2, rat);
+            ExBorder (str, 0);
+
+            DataModule1 -> Rating_BallFDQuery -> Next ();
+            str++;
+            np++;
+        } // end while sem  && !Eof
+
+        // Расчет среднего значения
+        toEx (str, 2, AnsiString ("Средний балл по курсу:"));
+        App.OlePropertyGet ("Cells", str, 4).OlePropertySet ("FormulaR1C1",
+            ("=СРЗНАЧ (R[-" + AnsiString (str - 4) + "]C:R[-1]C)").c_str ());
+
+        ExAutoFit (1, 5);
+    } // end while !Eof
+    DataModule1 -> Rating_BallFDQuery -> ApplyUpdates ();
+    ExSave (2);
+    // ---end По курсу
+
+    // ---По факультету
+    rec_rat = Open_SQL (s_r + s_f);
+
+    DataModule1 -> ExelInit ();
+
+    str = 2; // номер строки
+    np = 1; // номер п/п
+    rat = 1; // первоначальное место
+
+    ball = DataModule1 -> Rating_BallFDQueryBALL_R -> Value;
+
+    zag = "РЕЙТИНГ СТУДЕНТОВ ПО ФАКУЛЬТЕТУ ";
+    ExShapka (str, zag, 1);
+    str += 2;
+
+    // записываем в Excel данные
+    while (!DataModule1 -> Rating_BallFDQuery -> Eof) { // while !Eof
+        toEx (str, 1, Variant (np));
+        toEx (str, 2, AnsiString (DataModule1 -> Rating_BallFDQueryFIO -> Value));
+
+        // формат ячейки текстовый
+        Sh.OlePropertyGet ("Cells", str, 3).OlePropertySet ("NumberFormat", "@");
+
+        toEx (str, 3, AnsiString (DataModule1 -> Rating_BallFDQueryN_GROUP -> Value));
+        Sh.OlePropertyGet ("Cells", str, 3).OlePropertySet
+            ("HorizontalAlignment", 3);
+        toEx (str, 4, Variant (DataModule1 -> Rating_BallFDQueryBALL_R -> Value));
+        Sh.OlePropertyGet ("Cells", str, 4).OlePropertySet
+            ("HorizontalAlignment", 3);
+
+        if (ball != DataModule1 -> Rating_BallFDQueryBALL_R -> Value)
+        { // if ball не такой же
+            ball = DataModule1 -> Rating_BallFDQueryBALL_R -> Value;
+            rat++;
+        } // end if ball не такой же
+
+        toEx (str, 5, Variant (rat));
+        Sh.OlePropertyGet ("Cells", str, 5).OlePropertySet
+            ("HorizontalAlignment", 3);
+
+        Save_Rat (3, rat);
+
+        toEx (str, 6, Variant (DataModule1 -> Rating_BallFDQueryR_KURS -> Value));
+        Sh.OlePropertyGet ("Cells", str, 6).OlePropertySet
+            ("HorizontalAlignment", 3);
+        toEx (str, 7, Variant (DataModule1 -> Rating_BallFDQueryR_GROUP -> Value));
+        Sh.OlePropertyGet ("Cells", str, 7).OlePropertySet
+            ("HorizontalAlignment", 3);
+
+        ExBorder (str, 1);
+        DataModule1 -> Rating_BallFDQuery -> Next ();
+        str++;
+        np++;
+    } // end while !Eof
+    // Расчет среднего значения
+    toEx (str, 2, AnsiString ("Средний балл по факультету:"));
+    App.OlePropertyGet ("Cells", str, 4).OlePropertySet ("FormulaR1C1",
+        ("=СРЗНАЧ (R[-" + AnsiString (str - 4) + "]C:R[-1]C)").c_str ());
+
+    ExAutoFit (1, 7);
+    DataModule1 -> Rating_BallFDQuery -> ApplyUpdates ();
+    DataModule1 -> Rating_BallFDQuery -> CommitUpdates ();
+    ExSave (3);
+    // ---end По факультету
+
+    // -----------end  ОСНОВНАЯ ЧАСТЬ
+
+    App.Clear ();
+    Sh.Clear ();
+}
+
+
+void __fastcall TResult_RatingForm::BitBtn2Click (TObject *Sender) {
+    // Проверки
+    if (Edit1 -> Text == "") { // if  Полугодие
+        ShowMessage ("Введите полугодие 1 или 2!");
+        return;
+    } // end if  Полугодие
+    else { // else не пустое
+        if (Edit1 -> Text != "1" && Edit1 -> Text != "2")
+        { // if проверка на правильный ввод
+            ShowMessage ("Полугодие должно быть 1 или 2!");
+            Edit1 -> Text = "";
+            Edit1 -> SetFocus ();
+            return;
+        } // end if проверка на правильный ввод
+    } // end else не пустое
+
+    if (Edit2 -> Text == "") { // if Учебный год
+        ShowMessage ("Введите Учебный год!");
+        return;
+    } // end if Учебный год
+
+    // ----------------------
+
+    rec_rat = Open_SQL (s_r + s_f);
+
+    if (!rec_rat) { // if нет записей
+        ShowMessage ("Нет записей!");
+        return;
+    } // end if нет записей
+
+    // показ формы
+    Result_RatingForm -> Height = 590;
+    Panel2 -> Visible = true;
+    Label2 -> Caption = "Сортировка по набранным баллам по факультету";
+    Panel3 -> Visible = true;
+}
+
+
+void __fastcall TResult_RatingForm::DBGrid1TitleClick (TColumn *Column) {
+    AnsiString sql_hvost = "";
+    // переменная для определения порядка сортировки при щелчке по заголовкам
+
+    switch (Column -> Index) { // switch
+
+    case 6: // R_GROUP
+        sql_hvost =
+            " order by Rating.R_GROUP, People.FAM, People.NAME, People.OTCH";
+        Label2 -> Caption = "Сортировка по рейтингу по группе";
+        break;
+    case 5: // R_KURS
+        sql_hvost =
+            " order by Rating.R_KURS, People.FAM, People.NAME, People.OTCH";
+        Label2 -> Caption = "Сортировка по рейтингу по курсу";
+        break;
+    case 4: // R_FAC
+        sql_hvost =
+            " order by Rating.R_FAC, People.FAM, People.NAME, People.OTCH";
+        Label2 -> Caption = "Сортировка по рейтингу по факультету";
+        break;
+    case 3: // BALL_R
+        sql_hvost = s_f;
+        Label2 -> Caption = "Сортировка по набранным баллам";
+        break;
+    case 2: // SPECIAL
+        sql_hvost =
+            " order by Specializ.SPECIAL, People.FAM, People.NAME, People.OTCH";
+        Label2 -> Caption = "Сортировка по специализации";
+        break;
+    case 1: // N_GROUP
+        sql_hvost =
+            " order by Increment_group.N_GROUP, Specializ.SPECIAL, People.FAM, People.NAME, People.OTCH";
+        Label2 -> Caption = "Сортировка по номеру группы, специализации";
+        break;
+    case 0: // FIO
+        sql_hvost = " order by People.FAM, People.NAME, People.OTCH ";
+        Label2 -> Caption = "Сортировка по ФИО";
+        break;
+    } // end switch
+
+    rec_rat = Open_SQL (s_r + sql_hvost);
+
+}
+
+
+void __fastcall TResult_RatingForm::Edit1Change (TObject *Sender) {
+    // --показ формы
+    Result_RatingForm -> Height = 133;
+    Panel2 -> Visible = false;
+    Panel3 -> Visible = false;
+
+    // --
+    DataModule1 -> Rating_BallFDQuery -> Close ();
+}
+
+
+void __fastcall TResult_RatingForm::SpeedButton1Click (TObject *Sender) {
+    // передача данных из DBGrid1 в Excel
+    DBgrid_toEx (DBGrid1);
+}
+
+
+void __fastcall TResult_RatingForm::Edit1KeyPress (TObject *Sender, char &Key) {
+    DataModule1 -> Edit_Key (Key);
+    // Как сделать, чтобы в TEdit можно было вводить только числа?
+}
+
+
+void __fastcall TResult_RatingForm::ApplicationEvents1Message (tagMSG &Msg,
+    bool &Handled) {
+    // организовать нормальную работу мышиного колесика в DBGrid
+
+    if (DBGrid1 -> Focused ()) {
+        if (Msg.message == WM_MOUSEWHEEL) {
+            Msg.message = WM_KEYDOWN;
+            Msg.lParam = 0;
+            short int i = HIWORD (Msg.wParam);
+            Msg.wParam = (i > 0) ? VK_UP : VK_DOWN;
+            Handled = false;
+        }
+    }
+}
+

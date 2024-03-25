@@ -1,0 +1,817 @@
+#include <vcl.h>
+#pragma hdrstop
+
+
+#include "AutoDiplomUnit.h"
+#include "DataModule.h"
+#include "DM3Unit.h"
+#include "Func.h"
+
+
+#pragma package (smart_init)
+#pragma resource "*.dfm"
+
+
+TAutoDiplomForm * AutoDiplomForm;
+
+
+AnsiString par_god = "",                                                        // параметр выпуска
+           reg     = "",                                                        // регистрационный номер
+           tab1    = " ";                                                       // для вставки символов
+
+int        n_reg   = 0,                                                         // количество пронумерованных
+           reg_5   = 0,                                                         // номер для 5-го курса
+           reg_6   = 0,                                                         // номер для 6-го курса
+           str_rr  = 1;                                                         // номер строки
+
+TFDQuery * qd,
+         * qd_count;
+
+Variant    App_n,
+           Sh;
+
+
+// BitBtn1Click
+// BitBtn2Click
+// Diplom_Shapka
+// Diplom_text
+// Diplom_Titul
+// FormClose
+// FormCreate
+// MaxReg
+// QOpen
+// RadioGroup1Click
+// RadioGroup2Click
+
+
+
+__fastcall TAutoDiplomForm::TAutoDiplomForm (TComponent* Owner) : TForm (Owner) {
+}
+
+void __fastcall TAutoDiplomForm::FormClose (TObject *Sender,
+    TCloseAction &Action) {
+    Action = caFree;
+
+    DM3 -> Count_VipuskFDQuery -> Close ();
+    DM3 -> MaxRegFDQuery -> Close ();
+    DataModule1 -> DiplomREGFDQuery -> Close ();
+    DM3 -> DiplomREG_estFDQuery -> Close ();
+}
+
+void __fastcall TAutoDiplomForm::RadioGroup1Click (TObject *Sender) {
+    Label11 -> Visible = false;
+
+    reg = ""; // регистрационный номер
+    // Шаблон   0810/001       08-год выпуска,  1 (1.2.0.4) факультет, 0 (0.1) вид обучения
+    reg = AnsiString (uch_god + 1).SubString (3, 2);
+    if (nom_fac != 3)
+        reg += AnsiString (nom_fac);
+    else
+        reg += "0"; // факультет ОФКиТ
+    reg += AnsiString (RadioGroup1 -> ItemIndex);
+    reg += "/";
+
+    QOpen (4); // 4 курс - д/о
+    MaxReg (4); // максимальный рег.номер
+    // ------
+
+    Label9 -> Caption = reg + "001"; // Шаблон регистрационного номера:
+
+    if (DM3 -> MaxRegFDQueryMAX -> Value != "") {
+        n_reg = DM3 -> MaxRegFDQueryMAX -> Value.SubString (6, 3).ToInt ();
+        AnsiString new_nom1 = "";
+        n_reg++;
+        switch (IntToStr (n_reg).Length ()) {
+        case 1:
+            new_nom1 = "00" + IntToStr (n_reg);
+            break;
+        case 2:
+            new_nom1 = "0" + IntToStr (n_reg);
+            break;
+        case 3:
+            new_nom1 = IntToStr (n_reg);
+            break;
+        }
+        Label10 -> Caption = reg + new_nom1; // Генерация начнется с номера:
+    }
+    else {
+        Label10 -> Caption = Label9 -> Caption; // Генерация начнется с номера:
+        n_reg++;
+    }
+    Panel2 -> Visible = true;
+}
+
+void __fastcall TAutoDiplomForm::QOpen (int kurs) {
+    // -----Количество студентов на выпускном курсе
+    DM3 -> Count_VipuskFDQuery -> Close ();
+    DM3 -> Count_VipuskFDQuery -> ParamByName ("N_FAC") -> AsSmallInt = nom_fac;
+    DM3 -> Count_VipuskFDQuery -> ParamByName ("EDU") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex;
+    DM3 -> Count_VipuskFDQuery -> ParamByName ("KURS") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex + kurs;
+    DM3 -> Count_VipuskFDQuery -> Open ();
+    // -----
+    // максимальный присвоенный рег.номер (например 1240/002)
+    /* DM3 -> MaxRegQuery -> Close ();
+     DM3 -> MaxRegQuery -> ParamByName ("N_FAC") -> AsSmallInt=nom_fac;
+     DM3 -> MaxRegQuery -> ParamByName ("EDU") -> AsSmallInt=RadioGroup1 -> ItemIndex;
+     DM3 -> MaxRegQuery -> ParamByName ("KURS") -> AsSmallInt=RadioGroup1 -> ItemIndex+kurs;
+     DM3 -> MaxRegQuery -> ParamByName ("GOD") -> AsString=par_god;
+     DM3 -> MaxRegQuery -> Open (); */
+
+    // ---DiplomREGQuery
+    DataModule1 -> DiplomREGFDQuery -> Close ();
+    DataModule1 -> DiplomREGFDQuery -> ParamByName ("N_FAC") -> AsSmallInt = nom_fac;
+    DataModule1 -> DiplomREGFDQuery -> ParamByName ("EDU") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex;
+    DataModule1 -> DiplomREGFDQuery -> ParamByName ("KURS") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex + kurs;
+    DataModule1 -> DiplomREGFDQuery -> ParamByName ("GOD") -> AsString = par_god;
+    DataModule1 -> DiplomREGFDQuery -> Open ();
+    DataModule1 -> DiplomREG_countFDQuery -> Close ();
+    DataModule1 -> DiplomREG_countFDQuery -> ParamByName ("N_FAC") -> AsSmallInt =
+        nom_fac;
+    DataModule1 -> DiplomREG_countFDQuery -> ParamByName ("EDU") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex;
+    DataModule1 -> DiplomREG_countFDQuery -> ParamByName ("KURS") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex + kurs;
+    DataModule1 -> DiplomREG_countFDQuery -> ParamByName ("GOD") -> AsString = par_god;
+    DataModule1 -> DiplomREG_countFDQuery -> Open ();
+
+    // ----DiplomREG_estQuery
+    DM3 -> DiplomREG_estFDQuery -> Close ();
+    DM3 -> DiplomREG_estFDQuery -> ParamByName ("N_FAC") -> AsSmallInt = nom_fac;
+    DM3 -> DiplomREG_estFDQuery -> ParamByName ("EDU") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex;
+    DM3 -> DiplomREG_estFDQuery -> ParamByName ("KURS") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex + kurs;
+    DM3 -> DiplomREG_estFDQuery -> ParamByName ("GOD") -> AsString = par_god;
+    DM3 -> DiplomREG_estFDQuery -> Open ();
+
+    Label2 -> Caption = AnsiString (DM3 -> Count_VipuskFDQueryCOUNT -> Value);
+    // Количество студентов на выпускном курсе:
+    Label4 -> Caption = AnsiString (DM3 -> DiplomREG_estFDQuery -> RecordCount);
+    // Количество дипломов с регистрационным номером:
+    Label6 -> Caption =
+        AnsiString (DataModule1 -> DiplomREG_countFDQueryCOUNT -> Value);
+    // Количество дипломов без регистрационного номера:
+
+}
+
+void __fastcall TAutoDiplomForm::MaxReg (int kurs) {
+    // максимальный присвоенный рег.номер (например 1240/002)
+    DM3 -> MaxRegFDQuery -> Close ();
+    DM3 -> MaxRegFDQuery -> ParamByName ("N_FAC") -> AsSmallInt = nom_fac;
+    DM3 -> MaxRegFDQuery -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+    DM3 -> MaxRegFDQuery -> ParamByName ("KURS") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex + kurs;
+    DM3 -> MaxRegFDQuery -> ParamByName ("GOD") -> AsString = par_god;
+    DM3 -> MaxRegFDQuery -> Open ();
+}
+
+void __fastcall TAutoDiplomForm::RadioGroup2Click (TObject *Sender) {
+    Label11 -> Visible = false;
+    n_reg = 0;
+    reg = ""; // регистрационный номер
+    // Шаблон   0810/001       08-год выпуска,  1 (1.2.0.4) факультет, 0 (0.1) вид обучения
+    reg = AnsiString (uch_god + 1).SubString (3, 2);
+    if (nom_fac != 3)
+        reg += AnsiString (nom_fac);
+    else
+        reg += "0"; // факультет ОФКиТ
+    reg += AnsiString (RadioGroup1 -> ItemIndex);
+    reg += "/";
+
+    Label9 -> Caption = reg + "001"; // Шаблон регистрационного номера:
+
+    if (RadioGroup2 -> ItemIndex) { // if бакалавр
+        QOpen (4); // 5 - курс - заочное
+
+        MaxReg (5); // максимальный рег.номер 6 курса
+        if (DM3 -> MaxRegFDQueryMAX -> Value != "")
+            reg_6 = DM3 -> MaxRegFDQueryMAX -> Value.SubString (6, 3).ToInt ();
+
+        MaxReg (4); // максимальный рег.номер 5 курса
+        if (DM3 -> MaxRegFDQueryMAX -> Value != "")
+            reg_5 = DM3 -> MaxRegFDQueryMAX -> Value.SubString (6, 3).ToInt ();
+
+        if (!reg_6) { // if у 6-го курса НЕТ рег.номеров
+            ShowMessage ("Сначало сгенерируйте номера для специалистов!");
+            RadioGroup1 -> ItemIndex = -1;
+            RadioGroup2 -> ItemIndex = -1;
+            RadioGroup2 -> Visible = false;
+            Panel2 -> Visible = false;
+            return;
+        } // end if у 6-го курса НЕТ рег.номеров
+
+        if (!reg_5)
+            n_reg = reg_6; // if рег.номера НЕТ  (5 курс)
+
+        if (reg_6 != 0 && reg_5 != 0)
+        { // if есть и у 5-го и у 6-го курса - берем максимальный
+            if (reg_6 > reg_5)
+                n_reg = reg_6;
+            else
+                n_reg = reg_5;
+        } // end if есть и у 5-го и у 6-го курса - берем максимальный
+
+    } // and if бакалавр
+    else { // else специалист
+        QOpen (5); // 6 - курс - заочное
+
+        MaxReg (4); // максимальный рег.номер 5 курса
+        if (DM3 -> MaxRegFDQueryMAX -> Value != "")
+            reg_5 = DM3 -> MaxRegFDQueryMAX -> Value.SubString (6, 3).ToInt ();
+
+        MaxReg (5); // максимальный рег.номер 6 курса
+        if (DM3 -> MaxRegFDQueryMAX -> Value != "")
+            reg_6 = DM3 -> MaxRegFDQueryMAX -> Value.SubString (6, 3).ToInt ();
+
+        if (reg_6)
+            n_reg = reg_6;
+    } // end else специалист
+
+    if (n_reg) { // if n_reg
+        AnsiString new_nom1 = "";
+        n_reg++;
+        switch (IntToStr (n_reg).Length ()) {
+        case 1:
+            new_nom1 = "00" + IntToStr (n_reg);
+            break;
+        case 2:
+            new_nom1 = "0" + IntToStr (n_reg);
+            break;
+        case 3:
+            new_nom1 = IntToStr (n_reg);
+            break;
+        }
+        Label10 -> Caption = reg + new_nom1; // Генерация начнется с номера:
+    } // end if n_reg
+    else { // else
+        Label10 -> Caption = Label9 -> Caption; // Генерация начнется с номера:
+        n_reg++;
+    } // end else
+    Panel2 -> Visible = true;
+}
+
+void __fastcall TAutoDiplomForm::BitBtn1Click (TObject *Sender)
+{ // Сгенерировать номер
+    // ---проверки
+    if (!DataModule1 -> DiplomREG_countFDQueryCOUNT -> Value) {
+        ShowMessage ("Нет выпускников, у которых нужно генерировать номер!");
+        return;
+    }
+
+    // if (reg_5 && !RadioGroup2 -> ItemIndex)
+    // {
+    // ShowMessage ("Вы уже не можете генерировать номера для специалистов! Обратитесь к программисту!");
+    // return;
+    // }
+    // --------
+    AnsiString new_n_reg = "";
+    for (int i = 0; i < DataModule1 -> DiplomREG_countFDQueryCOUNT -> Value; i++)
+    { // for цикл по студентам
+        switch (IntToStr (n_reg).Length ()) {
+        case 1:
+            new_n_reg = "00" + IntToStr (n_reg);
+            break;
+        case 2:
+            new_n_reg = "0" + IntToStr (n_reg);
+            break;
+        case 3:
+            new_n_reg = IntToStr (n_reg);
+            break;
+        }
+        DataModule1 -> DiplomREGFDQuery -> Edit ();
+        DataModule1 -> DiplomREGFDQueryREGISTRATION -> Value = reg + new_n_reg;
+        DataModule1 -> DiplomREGFDQuery -> Post ();
+        DataModule1 -> DiplomREGFDQuery -> Next ();
+        n_reg++;
+    } // end for цикл по студентам
+    DataModule1 -> DiplomREGFDQuery -> ApplyUpdates ();
+    DataModule1 -> DiplomREGFDQuery -> CommitUpdates ();
+
+    Label11 -> Caption = "Последний сгенерированный номер: " + reg + new_n_reg;
+    Label11 -> Visible = true;
+}
+
+void __fastcall TAutoDiplomForm::BitBtn2Click (TObject *Sender)
+{ // Передать в Excel
+
+    tab1[1] = 0x0A; // Alt+Enter
+    str_rr = 1; // номер строки
+
+    int str_otl = 1; // номер строки для дипломов с отличием
+
+    // !!!if (Application -> MessageBox ("Хотите распечатать всех - нажмите Yes,\nтолько тех, которым сейчас сгенерировали номер - нажмите No?", "", MB_YESNO) == mrYes)
+    if (MessageDlg
+        ("Хотите распечатать всех - нажмите Yes,\nтолько тех, которым сейчас сгенерировали номер - нажмите No?",
+        mtConfirmation, TMsgDlgButtons () << mbYes << mbNo, 0) == mrYes)
+    { // if все дипломы распечатать
+        qd = DM3 -> DiplomREG_estFDQuery;
+        qd -> Close ();
+        qd -> ParamByName ("N_FAC") -> AsSmallInt = nom_fac;
+        qd -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+        qd -> ParamByName ("KURS") -> AsSmallInt = RadioGroup1 -> ItemIndex + 4;
+        qd -> ParamByName ("GOD") -> AsString = par_god;
+        qd -> Open ();
+    }
+    else { // else только те, которым сейчас дали номер
+        qd = DataModule1 -> DiplomREGExcelFDQuery;
+        qd -> Close ();
+        qd -> ParamByName ("N_FAC") -> AsSmallInt = nom_fac;
+        qd -> ParamByName ("EDU") -> AsSmallInt = RadioGroup1 -> ItemIndex;
+        qd -> ParamByName ("KURS") -> AsSmallInt = RadioGroup1 -> ItemIndex + 4;
+        qd -> ParamByName ("GOD") -> AsString = AnsiString (uch_god);
+        qd -> Open ();
+        qd -> First ();
+    }
+
+    if (qd -> RecordCount == 0) { // Нет людей
+        ShowMessage ("Нет данных для передачи в Excel!");
+        return;
+    }
+
+    // запускаем  Exel
+    DataModule1 -> ExelInit ();
+    // делаем количество листов в книге
+    App_n.OlePropertySet ("SheetsInNewWorkbook", 1);
+
+    // Шапка
+    Diplom_Shapka (false); // дипломы без отличия
+    if (CheckBox1 -> Checked)
+        Diplom_Shapka (true); // дипломы c отличием
+
+    str_rr++;
+    str_rr++;
+    str_otl = str_rr;
+
+    for (int i = 0; i < qd -> RecordCount; i++) {
+
+        if ( (qd -> FieldByName ("TYPE_DIPLOM") -> Value == 2 || qd -> FieldByName
+            ("TYPE_DIPLOM") -> Value == 6 || qd -> FieldByName ("TYPE_DIPLOM")
+            -> Value == 12) && (CheckBox1 -> Checked))
+        { // if диплом с отличием 2 или диплом иностранный с отличием 6 и включена опция в отдельный журнал
+            Diplom_text (str_otl, true);
+            str_otl++;
+        }
+        else { // else все остальные дипломы и один журнал для всех
+            Diplom_text (str_rr, false);
+            str_rr++;
+        }
+        qd -> Next ();
+    }
+
+    // переделать, чтобы выбирались ФИО из таблицы БД
+    AnsiString dec_f = "", met_f = "";
+    int v_edu = DM3 -> DiplomREG_estFDQueryVID_EDU -> Value;
+    switch (nom_fac) { // switch декан факультета
+    case 1:
+        dec_f = "В.И.Новицкая";
+        if (v_edu == 1)
+            met_f = "А.А.Трапкова";
+        else
+            met_f = "К.В.Дворецкая";
+        break;
+    case 2:
+        dec_f = "И.И.Гуслистова";
+        if (v_edu == 1)
+            met_f = "О.Н.Шабанова";
+        else
+            met_f = "Т.А.Молош";
+        break;
+    case 3:
+        dec_f = "Н.М.Машарская";
+        if (v_edu == 1)
+            met_f = "В.И.Апанович";
+        else
+            met_f = "С.М. Химиченко";
+        break;
+    case 4:
+        dec_f = "О.Н.Михайлова";
+        if (v_edu == 1)
+            met_f = "К.И.Липницкая";
+        else
+            met_f = "А.Л.Зеновко";
+        break;
+    }
+
+    str_rr++;
+    str_rr++;
+    str_rr++;
+    // подписи
+    Cell_2_Text_Ole2 (1, 3, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, "Руководитель учреждения образования ");
+    Cell_2_Text_Ole2 (5, 6, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, "С.Б.Репкин");
+    str_rr++;
+    str_rr++;
+    str_rr++;
+    Cell_2_Text_Ole2 (1, 2, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, "Председатель ГЭК");
+    Cell_2_Text_Ole2 (5, 6, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, "");
+    str_rr++;
+    str_rr++;
+    str_rr++;
+    Cell_2_Text_Ole2 (1, 2, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, "Декан факультета");
+    Cell_2_Text_Ole2 (5, 6, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, dec_f);
+    str_rr++;
+    str_rr++;
+    str_rr++;
+    Cell_2_Text_Ole2 (1, 2, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, "Секретарь факультета");
+    Cell_2_Text_Ole2 (5, 6, str_rr, false, "Arial", 12, false, 0, 2, 0, true,
+        true, met_f);
+
+    Diplom_Titul (false); // дипломы без отличия
+
+    if (CheckBox1 -> Checked)
+        Diplom_Titul (true); // дипломы c отличием
+
+    // Показываем книгу Excel
+    App_n.OlePropertySet ("Visible", true);
+
+    App_n.Clear ();
+    Sh.Clear ();
+
+}
+
+void __fastcall TAutoDiplomForm::Diplom_text (int str, bool otl)
+{ // Текст по строкам диплома
+
+    AnsiString name = "Дипломы";
+    if (otl)
+        name = "Дипломы с отличием";
+
+    // выделяем лист
+    Sh = App_n.OlePropertyGet ("WorkSheets", WideString (name));
+
+    // сделаем его активным
+    Sh.OleProcedure ("Activate");
+
+    // Высота строки
+    Variant dd = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", str, str);
+    dd.OlePropertySet ("RowHeight", 75);
+
+    // Регистрационный номер
+    Cell_2_Text_Ole2 (1, 1, str, true, "Arial", 12, false, 3, 2, 0, false, true,
+        qd -> FieldByName ("REGISTRATION") -> Value);
+    // ФИО
+    Cell_2_Text_Ole2 (2, 2, str, true, "Arial", 12, false, 2, 2, 0, false, true,
+        qd -> FieldByName ("FAM") -> Value + tab1 + qd -> FieldByName ("NAME") -> Value +
+        tab1 + qd -> FieldByName ("OTCH") -> Value + tab1 + qd -> FieldByName
+        ("N_ZACHET") -> Value);
+    Border_IndentLeft (2, 2, str, str, false, 0, 1); // отступ слева на 1 позицию
+
+    // Факультет
+    Cell_2_Text_Ole2 (3, 3, str, true, "Arial", 12, false, 3, 2, 0, false, true,
+        Grid_V (qd, "N_FAC"));
+    // Специальность + квалификация
+    // Cell_2_Text_Ole2 (4,4,str,true,"Arial",12,false,2,2,0,false,true,Grid_V (qd,"N_SPEC")+tab1+Grid_V (qd,"N_SPECIALIZ"));
+    Cell_2_Text_Ole2 (4, 4, str, true, "Arial", 12, false, 2, 2, 0, false, true,
+        Grid_V (qd, "N_SPECIALIZ") + tab1 + Grid_V (qd, "QUALIFICATION"));
+    Border_IndentLeft (4, 4, str, str, false, 0, 1); // отступ слева на 1 позицию
+
+    // Дата поступления на обучение (дата из приказа на зачисление)
+    // Cell_2_Text_Ole2 (5,5,str,true,"Arial",12,false,3,2,0,false,true,Grid_V (qd,"D_PRIKAZ_INCLUDE"));
+    // Год поступления на обучение (дата из приказа на зачисление)
+    String data_str1 = Grid_V (qd, "D_PRIKAZ_INCLUDE");
+    int data_lng = data_str1.Length ();
+    String data_str2 = data_str1.SubString (data_lng - 3, 4);
+    Cell_2_Text_Ole2 (5, 5, str, true, "Arial", 12, false, 3, 2, 0, false, true,
+        data_str2);
+
+    // Дата окончания обучения
+    // Cell_2_Text_Ole2 (6,6,str,true,"Arial",12,false,3,2,0,false,true,qd -> FieldByName ("D_PRIKAZ_KURS") -> Value);
+    TDateTime date1 = qd -> FieldByName ("D_PRIKAZ_KURS") -> Value;
+    unsigned short year1, month1, day1;
+    date1.DecodeDate (&year1, &month1, &day1);
+    Cell_2_Text_Ole2 (6, 6, str, true, "Arial", 12, false, 3, 2, 0, false,
+        true, year1);
+
+    // Дата и номер приказа об окончании обучения
+    // Cell_2_Text_Ole2 (7,7,str,true,"Arial",12,false,3,2,0,false,true,"№ "+qd -> FieldByName ("N_PUBLIC_PRIKAZ") -> Value+tab1+" от "+Grid_V (qd,"D_PUBLIC_PRIKAZ"));
+    Cell_2_Text_Ole2 (7, 7, str, true, "Arial", 12, false, 3, 2, 0, false, true,
+        Grid_V (qd, "D_PUBLIC_PRIKAZ") + tab1 + "№ " + qd -> FieldByName
+        ("N_PUBLIC_PRIKAZ") -> Value);
+
+    // Квалификация пока сказали не надо
+    // Cell_2_Text_Ole2 (6,6,str_r,true,"Arial",12,false,2,2,0,false,true,Grid_V (q,"QUALIFICATION"));
+
+    // Дата и номер протокола
+    // Cell_2_Text_Ole2 (8,8,str,true,"Arial",12,false,3,2,0,false,true,"№ "+qd -> FieldByName ("N_PROTOKOL") -> Value+tab1+" от "+qd -> FieldByName ("D_PROTOKOL") -> Value);
+    Cell_2_Text_Ole2 (8, 8, str, true, "Arial", 12, false, 3, 2, 0, false, true,
+        "" + qd -> FieldByName ("D_PROTOKOL") -> Value + tab1 + "№ " +
+        qd -> FieldByName ("N_PROTOKOL") -> Value);
+
+    // Номер диплома
+    AnsiString dip = "";
+    if (qd -> FieldByName ("TYPE_DIPLOM") -> Value == 2 || qd -> FieldByName
+        ("TYPE_DIPLOM") -> Value == 6)
+        dip = "с отличием" + tab1;
+    dip += qd -> FieldByName ("SERIA") -> Value;
+    dip += " № " + qd -> FieldByName ("NOM_DIPLOM") -> Value;
+    Cell_2_Text_Ole2 (9, 9, str, true, "Arial", 12, false, 3, 2, 0, false,
+        true, dip);
+
+    // Дата выдачи диплома
+    Cell_2_Text_Ole2 (10, 10, str, true, "Arial", 12, false, 3, 2, 0, false,
+        true, qd -> FieldByName ("D_VIPUSK") -> Value);
+
+    // Паспортные данные лица, получающего диплом
+    /* AnsiString pasp=Grid_V (qd,"PASPORT");
+     if (pasp!="") pasp+=tab1;
+     pasp+=Grid_V (qd,"PERSONAL_NOMER"); */
+    // Cell_2_Text_Ole2 (11,11,str,true,"Arial",12,false,3,2,0,false,true,pasp+tab1+""+tab1+"");
+
+    // из таблицы PERSONAL_DOCUM
+    AnsiString pasp = Grid_V (qd, "SERIES") + " ";
+    pasp += Grid_V (qd, "NUMBER") + tab1;
+    pasp += Grid_V (qd, "PERSONAL_NUMBER") + " выдан ";
+    pasp += Grid_V (qd, "WHO_GIVE") + tab1;
+    pasp += Grid_V (qd, "DATE_GIVE");
+    Cell_2_Text_Ole2 (11, 11, str, true, "Arial", 12, false, 3, 2, 0, false,
+        true, pasp);
+
+    // Сведения о высылке по почте или выдаче по доверенности (номер и дата)
+    Cell_2_Text_Ole2 (12, 12, str, true, "Arial", 12, false, 0, 2, 0, false,
+        true, "");
+
+    // Подпись лица, получающего диплом
+    Cell_2_Text_Ole2 (13, 13, str, true, "Arial", 12, false, 0, 2, 0, false,
+        true, "");
+}
+
+void __fastcall TAutoDiplomForm::Diplom_Shapka (bool otl) { // Шапка дипломов
+
+    // добавляем  лист
+    App_n.OlePropertyGet ("WorkSheets").OleProcedure ("add");
+    Sh = App_n.OlePropertyGet ("WorkSheets").OlePropertyGet ("Item", 1);
+
+    AnsiString name = "Дипломы";
+    if (otl)
+        name = "Дипломы с отличием";
+
+    Sh.OlePropertySet ("Name", WideString (name));
+    Sh = App_n.OlePropertyGet ("ActiveSheet");
+
+    // делаем горизонтальное выравнивание страницы
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Orientation", 2);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("CenterHorizontally", true);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Zoom", false);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("FitToPagesWide", 1);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("FitToPagesTall", 100);
+
+    // поля верхнее и нижнее
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("TopMargin", 36);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("BottomMargin", 30);
+
+    // поля левое и правое
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("LeftMargin", 58);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("RightMargin", 10);
+
+    Variant d; // ширина столбца
+    int stb = 1; // номер столбца
+
+    // Высота строки
+    // d=Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item",1,1);d.OlePropertySet ("RowHeight",82);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 1);
+    d.OlePropertySet ("RowHeight", 93);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 2, 2);
+    d.OlePropertySet ("RowHeight", 15);
+
+    // Шапка
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true,
+        "Регистра-ционный номер документа об образовании");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, true, stb);
+    // d=Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item",stb,stb);d.OlePropertySet ("ColumnWidth",11);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 13);
+    stb++;
+
+    // Cell_2_Text_Ole2 (stb,stb,str_rr,true,"Times New Roman CYR",12,false,3,2,0,false,true,"Фамилия, имя, отчество выпускника");
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true,
+        "Фамилия, собственное имя, отчество, идентификационный номер обучающегося");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 26);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true, "Факультет");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, true, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 11);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true,
+        "Специальность (направление специальности), квалификация");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, true, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 60);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true, "Год поступления для получения образования");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 13);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true, "Год окончания обучения");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 12);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true, "Дата и номер приказа об окончании обучения");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 16);
+    stb++;
+
+    // Cell_2_Text_Ole2 (7,7,str_r,true,"Times New Roman CYR",12,false,3,2,0,false,true,"Присвоена квалификация");
+    // Cell_2_Text_Ole2 (7,7,str_r+1,true,"Arial",12,false,3,2,0,false,false,"6");
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true,
+        "Дата и номер протокола заседания государственной экзаменационной комиссии");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 21);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true, "Серия и номер бланка документа об образовании");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 18);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true, "Дата выдачи документа об образовании");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 13);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true, "Данные документа, удостоверяющего личность");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 25);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true,
+        "Сведения о высылке по почте или выдаче по доверенности");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 19);
+    stb++;
+
+    Cell_2_Text_Ole2 (stb, stb, str_rr, true, "Times New Roman CYR", 12, false,
+        3, 2, 0, false, true,
+        "Подпись лица, получившего документ об образовании");
+    Cell_2_Text_Ole2 (stb, stb, str_rr + 1, true, "Arial", 12, false, 3, 2, 0,
+        false, false, stb);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", stb, stb);
+    d.OlePropertySet ("ColumnWidth", 19);
+    stb++;
+
+    // определяем сквозные строки
+    AnsiString temp_text = "$" + AnsiString (str_rr) + ":$" +
+        AnsiString (str_rr + 1);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("PrintTitleRows",
+        WideString (temp_text));
+}
+
+void __fastcall TAutoDiplomForm::Diplom_Titul (bool otl)
+{ // Титульный лист дипломов
+    // bool otl дипломы с отличием - true, без отличия - false
+
+    // переходим на первый лист в книге, что бы не было проблем при добавлении
+    Sh = App_n.OlePropertyGet ("WorkSheets", 1);
+    Sh.OleProcedure ("Select");
+
+    // добавляем титульный лист
+    App_n.OlePropertyGet ("WorkSheets").OleProcedure ("add");
+    Sh = App_n.OlePropertyGet ("WorkSheets").OlePropertyGet ("Item", 1);
+
+    AnsiString name = "Титул дипломы";
+    if (otl)
+        name = "Титул дипломы с отличием";
+
+    // переименовываем лист и делаем его активным
+    Sh.OlePropertySet ("Name", WideString (name));
+    Sh = App_n.OlePropertyGet ("ActiveSheet");
+
+    // делаем горизонтальное выравнивание страницы
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Orientation", 2);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("CenterHorizontally", true);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Zoom", false);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("FitToPagesWide", 1);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("FitToPagesTall", 1);
+
+    // поля верхнее и нижнее
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("TopMargin", 36);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("BottomMargin", 30);
+    // поля левое и правое
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("LeftMargin", 58);
+    Sh.OlePropertyGet ("PageSetup").OlePropertySet ("RightMargin", 10);
+
+    Variant d;
+    // Высота строки
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 1);
+    d.OlePropertySet ("RowHeight", 20);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 2, 2);
+    d.OlePropertySet ("RowHeight", 20);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 3, 3);
+    d.OlePropertySet ("RowHeight", 20);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 4, 4);
+    d.OlePropertySet ("RowHeight", 20);
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 5, 5);
+    d.OlePropertySet ("RowHeight", 20);
+
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 6, 6);
+    d.OlePropertySet ("RowHeight", 47);
+    Cell_2_Text_Ole2 (1, 15, 6, false, "Times New Roman CYR", 16, true, 3, 3, 0,
+        true, false, "МИНИСТЕРСТВО СПОРТА И ТУРИЗМА РЕСПУБЛИКИ БЕЛАРУСЬ");
+    // Border_IndentLeft (1,15,6,6, false, 4, 0);//обрамление ячейки по низу
+
+    // d=Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item",7,7);d.OlePropertySet ("RowHeight",16);
+    // Cell_2_Text_Ole2 (1,15,7,false,"Times New Roman CYR",12,false,3,0,0,true,false,"Министерство (ведомство)");
+
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 7, 7);
+    d.OlePropertySet ("RowHeight", 30);
+    Cell_2_Text_Ole2 (1, 15, 7, false, "Times New Roman CYR", 16, true, 3, 3, 0,
+        true, false,
+        "Учреждение образования \"Белорусский государственный университет физической культуры\"");
+    // Border_IndentLeft (1,15,8,8, false, 4, 0);//обрамление ячейки по низу
+
+    DataModule1 -> FacFullFDQ -> Close ();
+    DataModule1 -> FacFullFDQ -> ParamByName ("nom_fac") -> AsSmallInt = nom_fac;
+    DataModule1 -> FacFullFDQ -> Open ();
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 8, 8);
+    d.OlePropertySet ("RowHeight", 30);
+    Cell_2_Text_Ole2 (1, 15, 8, false, "Times New Roman CYR", 16, true, 3, 3, 0,
+        true, false, DataModule1 -> FacFullFDQFAC -> AsString);
+    DataModule1 -> FacFullFDQ -> Close ();
+
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 9, 9);
+    d.OlePropertySet ("RowHeight", 68);
+    Cell_2_Text_Ole2 (1, 15, 9, false, "Times New Roman CYR", 20, true, 3, 0, 0,
+        true, false, "КНИГА");
+
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 10, 10);
+    d.OlePropertySet ("RowHeight", 26);
+    if (otl)
+        Cell_2_Text_Ole2 (1, 15, 10, false, "Times New Roman CYR", 20, true, 3,
+        0, 0, true, false,
+        "учета и выдачи документов об образовании с отличием");
+    else
+        Cell_2_Text_Ole2 (1, 15, 10, false, "Times New Roman CYR", 20, true, 3,
+        0, 0, true, false, "учета и выдачи документов об образовании");
+
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 11, 11);
+    d.OlePropertySet ("RowHeight", 185);
+
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 12, 12);
+    d.OlePropertySet ("RowHeight", 20);
+    Cell_2_Text_Ole2 (11, 11, 12, false, "Times New Roman CYR", 12, false, 0, 0,
+        0, false, false, "Начат");
+    Cell_2_Text_Ole2 (12, 12, 12, false, "Times New Roman CYR", 12, false, 0, 0,
+        0, false, false, "\"_____\" _____________ 20____ г.");
+
+    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 13, 13);
+    d.OlePropertySet ("RowHeight", 20);
+    Cell_2_Text_Ole2 (11, 11, 13, false, "Times New Roman CYR", 12, false, 0, 0,
+        0, false, false, "Окончен");
+    Cell_2_Text_Ole2 (12, 12, 13, false, "Times New Roman CYR", 12, false, 0, 0,
+        0, false, false, "\"_____\" _____________ 20____ г.");
+
+}
+
+void __fastcall TAutoDiplomForm::FormCreate (TObject *Sender) {
+    par_god = "%" + AnsiString (uch_god + 1) + "%";
+}
