@@ -1,0 +1,2458 @@
+#include <vcl.h>
+#pragma hdrstop
+
+
+#include "DataModule_Card.h"
+#include "DataModule.h"
+#include "DiplomUnit.h"
+#include "DM2Unit.h"
+#include "DM3Unit.h"
+#include "DualList.h"
+#include "Func.h"
+
+
+#pragma package (smart_init)
+// #pragma link     "RXCtrls"
+// #pragma link     "ToolEdit"
+// #pragma link     "MyList"
+#pragma resource "*.dfm"
+
+
+TDiplomForm * DiplomForm;
+
+
+
+AnsiString * mas_svod_nado[6];                                                  // массив записей учебного плана
+
+AnsiString   count_sql_1    = "                                             \
+    SELECT                                                                  \
+        COUNT                                                               \
+        (                                                                   \
+            Edu_plan.N_OBJECT                                               \
+        )                                                                   \
+    FROM                                                                    \
+        EDU_PLAN Edu_plan                                                   \
+            INNER JOIN                                                      \
+                OBJECT_PLAN Object_plan                                     \
+                    ON                                                      \
+                        (Edu_plan.N_OBJECT = Object_plan.N_OBJECT)          \
+    WHERE                                                                   \
+            Edu_plan.N_FAC        = :N_FAC                                  \
+        AND                                                                 \
+            Edu_plan.VID_EDU_PLAN = :VID_EDU                                \
+    ";
+
+AnsiString   count_sql_3    = "                                             \
+    AND                                                                     \
+        (                                                                   \
+            N_PLAN  NOT IN                                                  \
+            (                                                               \
+                SELECT                                                      \
+                    SPEC_PLAN.N_PLAN                                        \
+                FROM                                                        \
+                    SPEC_PLAN                                               \
+                        INNER JOIN                                          \
+                            EDU_PLAN                                        \
+                                ON                                          \
+                                    (SPEC_PLAN.N_PLAN = EDU_PLAN.N_PLAN)    \
+            )                                                               \
+         OR                                                                 \
+            N_PLAN IN                                                       \
+            (                                                               \
+                SELECT                                                      \
+                    SPEC_PLAN.N_PLAN                                        \
+                FROM                                                        \
+                    SPEC_PLAN                                               \
+                        INNER JOIN                                          \
+                            EDU_PLAN                                        \
+                                ON                                          \
+                                    (SPEC_PLAN.N_PLAN = EDU_PLAN.N_PLAN)    \
+                WHERE                                                       \
+                    spec_plan.n_specializ = :SPECIALIZ                      \
+            )                                                               \
+        )                                                                   \
+    ";
+
+AnsiString   sql_1          = "                                             \
+    SELECT                                                                  \
+        Edu_plan.N_OBJECT,                                                  \
+        Edu_plan.N_PLAN,                                                    \
+        Edu_plan.SEMESTR,                                                   \
+        Edu_plan.CLOCK_PLAN,                                                \
+        Edu_plan.CLOCK_PLAN_ALL,                                            \
+        Edu_plan.YEAR_PLAN,                                                 \
+        Edu_plan.N_FAC,                                                     \
+        Edu_plan.ZACH_EXAM,                                                 \
+        Edu_plan.VID_EDU_PLAN,                                              \
+        EDU_PLAN.SPECKURS,                                                  \
+        Object_plan.NAME_OBJECT                                             \
+    FROM                                                                    \
+        EDU_PLAN Edu_plan                                                   \
+            INNER JOIN                                                      \
+                OBJECT_PLAN Object_plan                                     \
+                    ON                                                      \
+                        (Edu_plan.N_OBJECT = Object_plan.N_OBJECT)          \
+    WHERE                                                                   \
+            Edu_plan.N_FAC        = :N_FAC                                  \
+        AND                                                                 \
+            Edu_plan.VID_EDU_PLAN = :VID_EDU                                \
+    ";
+
+AnsiString   sql_3          = "                                             \
+    AND                                                                     \
+        (                                                                   \
+            N_PLAN NOT IN                                                   \
+            (                                                               \
+                select                                                      \
+                    SPEC_PLAN.N_PLAN                                        \
+                from                                                        \
+                    SPEC_PLAN                                               \
+                        INNER JOIN                                          \
+                            EDU_PLAN                                        \
+                                ON                                          \
+                                    (SPEC_PLAN.N_PLAN = EDU_PLAN.N_PLAN)    \
+            )                                                               \
+         OR                                                                 \
+            N_PLAN IN                                                       \
+            (                                                               \
+                SELECT                                                      \
+                    SPEC_PLAN.N_PLAN                                        \
+                FROM                                                        \
+                    SPEC_PLAN                                               \
+                        INNER JOIN                                          \
+                            EDU_PLAN                                        \
+                                ON                                          \
+                                    (SPEC_PLAN.N_PLAN = EDU_PLAN.N_PLAN)    \
+                WHERE                                                       \
+                    spec_plan.n_specializ = :SPECIALIZ                      \
+            )                                                               \
+        )                                                                   \
+    ORDER BY                                                                \
+        Object_plan.NAME_OBJECT,                                            \
+        Edu_plan.N_OBJECT,                                                  \
+        edu_plan.semestr        DESC,                                       \
+        edu_plan.zach_exam      DESC                                        \
+    ";
+
+AnsiString   sql_s_ved      = "                                             \
+    AND                                                                     \
+        Edu_plan.SPECKURS IN (0, 1, 2, 3, 4)                                \
+    ";
+
+AnsiString   ochenka_diplom = "",                                               // оценка по дипломному проекту
+             Str_10,
+             Str_11,
+             tab            = " ",                                              // для вставки символов
+             thema_diplom   = "";                                               // тема дипломного проекта
+
+bool         facultativ     = false;                                            // переменная для факультатива
+
+int          god_first      = 0,                                                // первоначальный год
+             len_str10,
+             len_str11,
+             max_len_str,
+             nom_facultativ = 1,                                                // переменная для номера факультатива
+             nom_predmet,                                                       // счетчик предметов
+             str_r;
+// int          uch_god        = 2011;                                             // на случай если нужно сделать выписку выпускнику выбрать год последнего учебгоно плана
+
+String       fam;
+
+
+
+
+// BitBtn1Click
+// BitBtn2Click
+// BitBtn3Click
+// CheckListBox1Click
+// DateTimePicker1Change
+// FormClose
+// RadioGroup1Click
+// RadioGroup2Click
+// RadioGroup3Click
+// RxCheckListBox1Click
+// create_vid_control
+// Predmet_svod
+// Shapka_Diplom
+
+
+
+
+
+
+
+
+__fastcall TDiplomForm::TDiplomForm (TComponent* Owner) : TForm (Owner) {
+}
+
+void __fastcall TDiplomForm::Shapka_Diplom (AnsiString text, bool clock)
+{ // Шапка
+    // AnsiString text - текст в шапоче
+    // bool clock   - true - когда часы надо
+    // - false - часы не надо
+
+    tab[1] = 0x0A; // Alt+Enter
+
+    Cell_2_Text_Ole2 (1, 1, str_r, true, "TimesNewRoman", 10, true, 3, 2, 0,
+        false, true, "№ п/п");
+    if (clock) {
+        Cell_2_Text_Ole2 (2, 2, str_r, true, "TimesNewRoman", 10, true, 3, 2, 0,
+            false, false, text);
+        Cell_2_Text_Ole2 (3, 3, str_r, true, "TimesNewRoman", 10, true, 3, 2, 0,
+            false, true, "Общее количество" + tab + "академических часов");
+        Cell_2_Text_Ole2 (4, 4, str_r, true, "TimesNewRoman", 10, true, 3, 2, 0,
+            false, true, "Количество зачётных единиц");
+
+    }
+    else {
+        Cell_2_Text_Ole2 (2, 4, str_r, true, "TimesNewRoman", 10, true, 3, 2, 0,
+            true, false, text);
+
+    }
+    Cell_2_Text_Ole2 (5, 5, str_r, true, "TimesNewRoman", 10, true, 3, 2, 0,
+        false, true, "Отметки, зачеты");
+}
+
+void __fastcall TDiplomForm::FormClose (TObject *Sender, TCloseAction &Action) {
+
+    DM3 -> Detail_Svod_RealFDQuery -> Close ();
+    DM3 -> Detail_Svod_RealFDQuery -> SQL -> Clear ();
+    DM3 -> Detail_Svod_RealFDQuery -> SQL -> Add ("SELECT Object_plan.N_OBJECT, Object_plan.NAME_OBJECT, \
+Edu_plan.N_PLAN, Edu_plan.SEMESTR, Edu_plan.CLOCK_PLAN, Edu_plan.CLOCK_PLAN_ALL,\
+Edu_plan.YEAR_PLAN, Edu_plan.N_FAC, Edu_plan.ZACH_EXAM, \
+Edu_plan.VID_EDU_PLAN, Edu_plan.SPECKURS, \
+Result_ball.RESULT, \
+Result_ball.DATE_RESULT, Result_ball.STATUS_RESULT,  \
+People.NOMER, People.FAM, \
+People.NAME, People.OTCH, People.STATUS_PEOPLE  \
+FROM EDU_PLAN Edu_plan  \
+   INNER JOIN OBJECT_PLAN Object_plan  \
+   ON  (Edu_plan.N_OBJECT = Object_plan.N_OBJECT) \
+   INNER JOIN RESULT_BALL Result_ball \
+   ON  (Edu_plan.N_PLAN = Result_ball.N_PLAN)  \
+   INNER JOIN PEOPLE People \
+   ON  (Result_ball.NOMER = People.NOMER) \
+where (People.STATUS_PEOPLE=1) and  \
+People.NOMER=:NOMER and Object_plan.N_OBJECT=:N_OBJECT  \
+and Edu_plan.N_FAC=:FAC  \
+order by Edu_plan.SEMESTR");
+
+    DM3 -> Name_SpecFDQuery -> Close ();
+    DM3 -> Name_SpecFDQuery -> SQL -> Clear ();
+    DM3 -> Name_SpecFDQuery -> SQL -> Add ("SELECT Distinct ( Specializ.N_SPECIALIZ), Specializ.SPECIAL \
+FROM PEOPLE People \
+   INNER JOIN INCREMENT_GROUP Increment_group \
+   ON  (People.INC_GROUP = Increment_group.INC_GROUP) \
+   INNER JOIN FACULTY Faculty  \
+   ON  (People.N_FAC = Faculty.N_FAC) \
+   INNER JOIN SPECIALIZ Specializ  \
+   ON  (People.N_SPECIALIZ = Specializ.N_SPECIALIZ)  \
+where (People.STATUS_PEOPLE=1) and (People.INC_GROUP in (:INC_GROUP)) \
+and (People.N_FAC=:N_FAC) \
+ORDER BY People.FAM, People.NAME, People.OTCH");
+
+    DM3 -> People_SvodReport_SpecFDQuery -> Close ();
+    DM3 -> People_SvodReport_SpecFDQuery -> SQL -> Clear ();
+    DM3 -> People_SvodReport_SpecFDQuery -> SQL -> Add ("SELECT People.NOMER, People.FAM, People.NAME, \
+People.OTCH, People.VID_EDU, People.N_FAC, People.KURS, People.N_SPEC, \
+People.N_SPECIALIZ, People.N_PRIKAZ_KURS, People.N_GROUP, People.STATUS_PEOPLE, \
+People.INC_GROUP, People.N_ZACHET, Increment_group.VID_EDU, Increment_group.GOD, \
+Increment_group.N_GROUP, Faculty.FAC1, Specializ.SPECIAL  \
+FROM PEOPLE People \
+   INNER JOIN INCREMENT_GROUP Increment_group  \
+   ON  (People.INC_GROUP = Increment_group.INC_GROUP) \
+   INNER JOIN FACULTY Faculty \
+   ON  (People.N_FAC = Faculty.N_FAC)   \
+   INNER JOIN SPECIALIZ Specializ   \
+   ON  (People.N_SPECIALIZ = Specializ.N_SPECIALIZ) \
+where (People.STATUS_PEOPLE=1) and (People.INC_GROUP in (:INC_GROUP)) \
+and (People.N_FAC=:N_FAC)  and (People.N_SPECIALIZ in (:N_SPECIALIZ)) \
+ORDER BY People.FAM, People.NAME, People.OTCH");
+
+    Action = caFree;
+}
+
+void __fastcall TDiplomForm::RadioGroup1Click (TObject *Sender) {
+    // Очищаем
+    RadioGroup2 -> Items -> Clear ();
+    // и добавляем
+    RadioGroup2 -> Items -> Add ("1");
+    RadioGroup2 -> Items -> Add ("2");
+    RadioGroup2 -> Items -> Add ("3");
+    RadioGroup2 -> Items -> Add ("4");
+
+    if (RadioGroup1 -> ItemIndex) {
+        RadioGroup2 -> Items -> Add ("5");
+    }
+    RadioGroup2 -> Visible = true;
+    RadioGroup2 -> ItemIndex = -1;
+    Panel2 -> Visible = false;
+    Panel3 -> Visible = false;
+    RadioGroup3 -> Visible = false;
+    Label1 -> Visible = false;
+    DateTimePicker1 -> Visible = false;
+
+}
+
+void __fastcall TDiplomForm::create_vid_control (int nomer_s, int col,
+    AnsiString control, int stat) { // создание в зависимости от вида контроля
+    // int col  - количество записей в массиве
+    // int n_p  - номер предмета
+    // int control - вид контроля (экзамен, зачет, диф.зачет, ГОС, нет)
+    // int stat - статус (0 - обычный, 1 - спец.курс, факультатив, практика, курсовая
+
+    AnsiString sql_ball = "SELECT Object_plan.N_OBJECT, Object_plan.NAME_OBJECT, \
+Edu_plan.N_PLAN, Edu_plan.SEMESTR, Edu_plan.CLOCK_PLAN, Edu_plan.CLOCK_PLAN_ALL,\
+Edu_plan.YEAR_PLAN, Edu_plan.N_FAC, Edu_plan.ZACH_EXAM, \
+Edu_plan.VID_EDU_PLAN, Edu_plan.SPECKURS, \
+Result_ball.RESULT, Result_ball.DATE_RESULT, Result_ball.STATUS_RESULT, \
+People.NOMER, People.FAM, People.NAME, People.OTCH, People.STATUS_PEOPLE  \
+FROM EDU_PLAN Edu_plan \
+INNER JOIN OBJECT_PLAN Object_plan \
+   ON  (Edu_plan.N_OBJECT = Object_plan.N_OBJECT) \
+   INNER JOIN RESULT_BALL Result_ball \
+   ON  (Edu_plan.N_PLAN = Result_ball.N_PLAN)  \
+   INNER JOIN PEOPLE People  \
+   ON  (Result_ball.NOMER =  people.nomer) \
+where (People.STATUS_PEOPLE=1)";
+
+    AnsiString zach_spec = " and  (edu_plan.zach_exam in (" + control +
+        ")) and People.NOMER=" + nomer_s + " and edu_plan.n_object in (";
+    AnsiString n_pr = "";
+    AnsiString sql_hv =
+        ") order by edu_plan.n_object, Edu_plan.SEMESTR desc, edu_plan.n_plan desc";
+
+    int sch = 0;
+    int pr = 0; // номер предмета
+    int k = 0;
+    AnsiString ocenky = "";
+    bool b_10 = true; // 10-бальная система оценок
+    int align_b = 2;
+    // горизонтальное выравнивание по левому краю для десятибальной системы
+
+    for (int i = 0; i < col; i++) { // for экзамен, зачет, диф.зачет, ГОС, нет
+        if (mas_svod_nado[1][i] == control && mas_svod_nado[2][i] == stat) {
+            n_pr += mas_svod_nado[0][i] + ",";
+            sch++;
+        }
+    } // end for экзамен, зачет, диф.зачет, ГОС, нет
+
+    if (n_pr != "")
+        n_pr = n_pr.SubString (1, (n_pr.Length () - 1));
+    else
+        return;
+
+    DM3 -> Detail_Svod_RealFDQuery -> Close ();
+    DM3 -> Detail_Svod_RealFDQuery -> SQL -> Clear ();
+    DM3 -> Detail_Svod_RealFDQuery -> SQL -> Add (sql_ball + zach_spec + n_pr +
+        sql_hv);
+    DM3 -> Detail_Svod_RealFDQuery -> Open ();
+
+    AnsiString *mas_real[4]; // массив номеров и  студентов
+    for (int i = 0; i < 4; i++) { // for1
+        mas_real[i] = new AnsiString[sch];
+    } // end for 1
+
+    for (int z = 0; z < DM3 -> Detail_Svod_RealFDQuery -> RecordCount; z++) {
+        if (pr != DM3 -> Detail_Svod_RealFDQueryN_OBJECT -> Value) {
+            mas_real[0][k] =
+                AnsiString (DM3 -> Detail_Svod_RealFDQueryN_OBJECT -> Value);
+            // номер предмета
+            mas_real[1][k] =
+                ball_string (syst_ball, ball_int (syst_ball,
+                DM3 -> Detail_Svod_RealFDQueryRESULT -> Value), 1); // оценка
+            mas_real[2][k] =
+                AnsiString (DM3 -> Detail_Svod_RealFDQueryCLOCK_PLAN_ALL -> Value);
+            // общее количество часов реальных  Оля
+            mas_real[3][k] =
+                AnsiString (DM3 -> Detail_Svod_RealFDQueryCLOCK_PLAN -> Value);
+            // общее количество зачётных единиц  Дмитрий
+            pr = DM3 -> Detail_Svod_RealFDQueryN_OBJECT -> Value;
+            k++;
+        }
+        else {
+            mas_real[2][k - 1] =
+                AnsiString (StrToInt (mas_real[2][k - 1]) +
+                DM3 -> Detail_Svod_RealFDQueryCLOCK_PLAN_ALL -> Value); // Оля
+            mas_real[3][k - 1] =
+                AnsiString (FormatFloat ("0.0", StrToFloat (mas_real[3][k - 1]) +
+                DM3 -> Detail_Svod_RealFDQueryCLOCK_PLAN -> Value)); // Дмитрий
+        }
+        DM3 -> Detail_Svod_RealFDQuery -> Next ();
+    }
+
+    if (RadioGroup3 -> ItemIndex) // 5-ти бальная
+    {
+        b_10 = false;
+        align_b = 3;
+        // горизонтальное выравнивание по центру для пятибальной системы
+    }
+
+    for (int i = 0; i < col; i++) { // for экзамен, зачет, диф.зачет, нет
+        if (mas_svod_nado[1][i] == control && mas_svod_nado[2][i] == stat) {
+
+            Cell_2_Text_Ole2 (1, 1, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false, IntToStr (nom_predmet));
+            Cell_2_Text_Ole2 (2, 2, str_r, true, "Arial", 10, false, 0, 2, 0,
+                false, true, Text_predmet (mas_svod_nado[3][i],
+                DM3 -> People_SvodFDQueryN_SPECIALIZ -> Value));
+
+            if (mas_svod_nado[1][i] == "5") { // if дипломный проект
+                // объединяем
+                Border_IndentLeft (3, 3, str_r - 1, str_r, true, 4, 0);
+                Border_IndentLeft (3, 3, str_r - 1, str_r, true, 2, 0);
+                Border_IndentLeft (4, 4, str_r - 1, str_r, true, 4, 0);
+                Border_IndentLeft (4, 4, str_r - 1, str_r, true, 1, 0);
+
+            } // end if дипломный проект
+            else {
+                Cell_2_Text_Ole2 (3, 3, str_r, true, "Arial", 10, false, 3, 2, 0,
+                    false, false, mas_svod_nado[4][i]);
+                if (StrToFloat (mas_svod_nado[5][i])) {
+                    Cell_2_Text_Ole2 (4, 4, str_r, true, "Arial", 10, false, 3,
+                        2, 0, false, false, mas_svod_nado[5][i]);
+                }
+                else {
+                    Cell_2_Text_Ole2 (4, 4, str_r, true, "Arial", 10, false, 3,
+                        2, 0, false, false, "-");
+                }
+            }
+
+            AnsiString Str_1 = mas_svod_nado[3][i];
+
+            if (stat != 5) { // не ГОС
+
+                Cell_2_Text_Ole2 (5, 5, str_r, true, "Arial", 10, false, 2, 2, 0,
+                    false, false, "");
+                // end else это не ГОС экзамен
+
+                Str_11 = mas_svod_nado[3][i];
+
+                for (int j = 0; j < k; j++) {
+                    if (mas_svod_nado[0][i] == mas_real[0][j]) {
+                        // 04.2014 - изменение выписки к диплому
+
+                        ocenky = "";
+                        int n_ball; // количество оценок по предмету
+                        int zachet = 0; // кол-во зачетов по предмету
+
+                        DM3 -> FDQuery3 -> Close ();
+                        DM3 -> FDQuery3 -> ParamByName ("nomer") -> Value = nomer_s;
+                        DM3 -> FDQuery3 -> ParamByName ("n_object") -> Value =
+                            StrToInt (mas_svod_nado[0][i]);
+                        DM3 -> FDQuery3 -> Open ();
+
+                        n_ball = DM3 -> FDQuery3 -> RecordCount;
+                        int *balls = new int[n_ball];
+                        // одномерный массив, в котором содержатся все оценки по предмету
+
+                        for (int i = 0; i < n_ball; i++) {
+                            balls[i] = DM3 -> FDQuery3 -> FieldValues["result"];
+
+                            if (balls[i] == 1)
+
+                                zachet = zachet + 1;
+                            // подсчитываем кол-во зачетов по предмету
+
+                            if ( (zachet > 1) & (balls[i] == 1))
+                                // если следующий тоже зачет, то
+                                // не вносим его в оценки
+                                    ocenky = ocenky;
+
+                            else
+                                ocenky =
+                                    ocenky + ball_string (syst_ball,
+                                ball_int (syst_ball, balls[i]), 1) + ',' + " ";
+
+                            DM3 -> FDQuery3 -> Next ();
+                        }
+
+                        ocenky.Delete (ocenky.Length (), 1);
+                        // после вывода последней оценки убираем запятую
+                        ocenky.Delete (ocenky.Length (), 1); // и пробел
+
+                        Cell_2_Text_Ole2 (5, 5, str_r, true, "Arial", 10, false,
+                            align_b, 2, 0, false, false, ocenky);
+
+                        delete balls;
+                    }
+                }
+            } // end if не ГОС
+            else { // ГОС
+                // Оценка по ГОСу
+                DM3 -> GEK_VipiskaFDQuery -> Close ();
+                DM3 -> GEK_VipiskaFDQuery -> SQL -> Clear ();
+                DM3 -> GEK_VipiskaFDQuery -> SQL -> Add ("SELECT Gek.NOMER_GEK, Gek.NOMER, Gek.N_VED,\
+                 Gek.THEME, Gek.D_GEK, Gek.BALL_GEK, Gek.N_PROTOCOL,\
+                 Gek.D_PROTOCOL, Vedomost_gek.N_PLAN, Edu_plan.N_OBJECT, Object_plan.NAME_OBJECT \
+                 FROM GEK Gek   \
+                 INNER JOIN VEDOMOST_GEK Vedomost_gek \
+                 ON  (Gek.N_VED = Vedomost_gek.N_VED) \
+                 INNER JOIN EDU_PLAN Edu_plan   \
+                 ON  (Vedomost_gek.N_PLAN = Edu_plan.N_PLAN)  \
+                 INNER JOIN OBJECT_PLAN Object_plan \
+                 ON  (Edu_plan.N_OBJECT = Object_plan.N_OBJECT)    \
+                 where Gek.NOMER=:NOMER  \
+                 and Gek.BALL_GEK<>6 and Gek.BALL_GEK<>2 and Gek.BALL_GEK<>11 and Gek.BALL_GEK<>12 and Gek.BALL_GEK<>13 \
+                 and Edu_plan.N_OBJECT=:N_OBJECT  and edu_plan.zach_exam in (" +
+                    control + ")");
+                DM3 -> GEK_VipiskaFDQuery -> ParamByName ("NOMER") -> Value = nomer_s;
+                DM3 -> GEK_VipiskaFDQuery -> ParamByName ("N_OBJECT") -> Value =
+                    mas_svod_nado[0][i];
+                DM3 -> GEK_VipiskaFDQuery -> Open ();
+
+                if (mas_svod_nado[1][i] == "5") {
+                    thema_diplom = DM3 -> GEK_VipiskaFDQueryTHEME -> Value;
+                    ochenka_diplom =
+                        ball_string (syst_ball,
+                        ball_int (syst_ball,
+                        DM3 -> GEK_VipiskaFDQueryBALL_GEK -> Value), 1);
+                }
+
+                Cell_2_Text_Ole2 (5, 5, str_r, true, "Arial", 10, false, align_b,
+                    2, 0, false, false, ball_string (syst_ball,
+                    ball_int (syst_ball,
+                    DM3 -> GEK_VipiskaFDQueryBALL_GEK -> Value), 1));
+
+                Str_11 = Text_predmet (mas_svod_nado[3][i],
+                    DM3 -> People_SvodFDQueryN_SPECIALIZ -> Value);
+            }
+
+            Str_10 = ocenky;
+            len_str10 = Str_10.Length ();
+            len_str11 = Str_11.Length ();
+
+            if (len_str10 * 3 > len_str11) {
+                max_len_str = len_str10 * 3;
+            }
+            else
+                max_len_str = len_str11;
+
+            // объединяем
+            AnsiString diap = mas_column[1] + str_r + ":" +
+                mas_column[3] + str_r;
+            Variant Rang = App_n.OlePropertyGet ("Range", WideString (diap));
+
+            int rowheight = 15;
+            if (Str_1.Length () > 50)
+                rowheight = 25;
+
+            if (max_len_str < 69) {
+                Rang.OlePropertySet ("RowHeight", rowheight);
+            }
+
+            if ( (max_len_str >= 69) & (max_len_str < 138)) {
+                Rang.OlePropertySet ("RowHeight", 30);
+            }
+
+            if ( (max_len_str >= 138) & (max_len_str < 207)) {
+                Rang.OlePropertySet ("RowHeight", 45);
+            }
+
+            if (max_len_str >= 207) {
+                Rang.OlePropertySet ("RowHeight", 60);
+            }
+
+            Variant d16;
+            d16 = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", str_r, 5);
+            d16.OlePropertySet ("HorizontalAlignment", 3);
+            d16.OlePropertySet ("VerticalAlignment", 4);
+
+            str_r++;
+            nom_predmet++;
+        }
+    }
+    for (int i = 0; i < 3; i++)
+        delete[]mas_real[i];
+}
+
+void __fastcall TDiplomForm::Predmet_svod (int col, AnsiString control, int stat)
+{ // функция для занесения предметов в сводную ведомость
+    // int col  - количество записей в массиве
+    // int control - вид контроля (экзамен, зачет, диф.зачет, ГОС, нет)
+    // int stat - статус (0 - обычный, 1 - спец.курс, факультатив, практика, курсовая
+
+    for (int i = 0; i < col; i++) { // for экзамен, зачет, диф.зачет, ГОС, нет
+        if (!stat) { // if stat=0
+
+            if (mas_svod_nado[1][i] == control && mas_svod_nado[2][i] == "0") {
+                mas_svod_nado[4][i] = AnsiString (nom_predmet + 2);
+                Cell_2_Text_Ole2 (nom_predmet + 2, nom_predmet + 2, str_r, true,
+                    "Arial", 10, false, 3, 0, 90, false, false,
+                    mas_svod_nado[3][i]);
+                Cell_2_Text_Ole2 (nom_predmet + 2, nom_predmet + 2, str_r + 1,
+                    true, "Arial", 10, false, 3, 2, 0, false, false,
+                    IntToStr (nom_predmet));
+
+                nom_predmet++;
+            }
+
+        } // end if stat=0
+        else { // else stat=1
+            if (mas_svod_nado[2][i] == control) {
+                mas_svod_nado[4][i] = AnsiString (nom_predmet + 2);
+                Cell_2_Text_Ole2 (nom_predmet + 2, nom_predmet + 2, str_r, true,
+                    "Arial", 10, false, 3, 0, 90, false, false,
+                    mas_svod_nado[3][i]);
+                Cell_2_Text_Ole2 (nom_predmet + 2, nom_predmet + 2, str_r + 1,
+                    true, "Arial", 10, false, 3, 2, 0, false, false,
+                    IntToStr (nom_predmet));
+
+                nom_predmet++;
+            }
+        } // end else stat=1
+    } // for экзамен, зачет, диф.зачет, ГОС, нет
+}
+
+void __fastcall TDiplomForm::RadioGroup2Click (TObject *Sender) {
+    if (RadioGroup2 -> ItemIndex != -1) {
+        DM3 -> Check_Add_Group (RadioGroup1 -> ItemIndex,
+            (RadioGroup2 -> ItemIndex + 1), CheckListBox1);
+        Panel2 -> Visible = true;
+        Panel3 -> Visible = false;
+        RadioGroup3 -> Visible = false;
+        Label1 -> Visible = false;
+        DateTimePicker1 -> Visible = false;
+    }
+}
+
+void __fastcall TDiplomForm::BitBtn1Click (TObject *Sender)
+{ // Выдача выписки к диплому
+    AnsiString inc_gr = DM3 -> Check_Return_Group (RadioGroup1 -> ItemIndex,
+        CheckListBox1);
+
+    if (inc_gr == "") { // проверка на вшивость
+        ShowMessage ("Вы не выбрали номер группы!");
+        return;
+    }
+
+    // Формирования Query
+    DataModule1 -> People_KursFDQuery -> Close ();
+    DataModule1 -> People_KursFDQuery -> SQL -> Clear ();
+    DataModule1 -> People_KursFDQuery -> SQL -> Add ("SELECT NOMER, FAM, NAME, OTCH, \
+KURS, INC_GROUP, STATUS_KURS, N_GROUP, STATUS_PEOPLE  \
+FROM PEOPLE People WHERE (INC_GROUP in (" + inc_gr + ")) \
+AND STATUS_PEOPLE = 1 \
+ORDER BY N_GROUP, FAM, NAME, OTCH");
+    DataModule1 -> People_KursFDQuery -> Open ();
+
+    DualListDlg = new TDualListDlg (this);
+    DualListDlg -> SrcList -> Items -> Clear ();
+    DualListDlg -> DstList -> Items -> Clear ();
+    // Мой компонент
+    for (int i = 0; i < DataModule1 -> People_KursFDQuery -> RecordCount; i++) {
+        DualListDlg -> SrcList -> Items -> AddObject
+            (DataModule1 -> People_KursFDQueryFAM -> Value + " " +
+            DataModule1 -> People_KursFDQueryNAME -> Value + " " +
+            DataModule1 -> People_KursFDQueryOTCH -> Value + " " +
+            DataModule1 -> People_KursFDQueryN_GROUP -> Value + " гр.",
+            (TObject *) (DataModule1 -> People_KursFDQueryNOMER -> Value));
+        DataModule1 -> People_KursFDQuery -> Next ();
+    } // for
+
+    DualListDlg -> ShowModal ();
+
+    if (DataModule2 -> printdlg == true) { // if MyList1 -> Execute
+        AnsiString Str_Nomer = "";
+        for (int i = 0; i <= DualListDlg -> DstList -> Items -> Count - 1; i++) {
+            Str_Nomer +=
+                String ( (int) (DualListDlg -> DstList -> Items -> Objects[i])) + ",";
+            // возвращаем номер студента
+        } // 1-ый for
+        delete DualListDlg;
+        Str_Nomer.SetLength (Str_Nomer.Length () - 1);
+
+        DM3 -> People_SvodFDQuery -> Close ();
+        DM3 -> People_SvodFDQuery -> SQL -> Clear ();
+        DM3 -> People_SvodFDQuery -> SQL -> Add ("SELECT People.NOMER, People.FAM, People.NAME, People.OTCH, \
+   People.POL, People.VID_EDU, People.N_FAC, \
+   People.KURS, People.N_SPEC, People.N_SPECIALIZ, People.N_PRIKAZ_KURS, \
+   People.N_FOUND, People.N_FOUND_INCLUDE, People.N_PRIKAZ_INCLUDE, People.D_PRIKAZ_INCLUDE, \
+   People.N_GROUP, People.STATUS_PEOPLE, People.INC_GROUP,  \
+   Speciality.SPEC, Specializ.SPECIAL, Specializ.SPECIAL_SKLON, Specializ.SPECIAL_DIRECTION, Faculty.FAC, Faculty.FAC1 \
+   FROM PEOPLE People \
+   INNER JOIN SPECIALITY Speciality ON  (People.N_SPEC = Speciality.N_SPEC) \
+   INNER JOIN SPECIALIZ Specializ   ON  (People.N_SPECIALIZ = Specializ.N_SPECIALIZ)   \
+   INNER JOIN FACULTY Faculty ON  (People.N_FAC = Faculty.N_FAC) \
+   where (People.NOMER IN (" + Str_Nomer + "))\
+   Order by  People.N_SPECIALIZ, People.FAM, People.NAME, People.OTCH");
+        DM3 -> People_SvodFDQuery -> Open ();
+
+        // запускаем  Exel
+        DataModule1 -> ExelInit ();
+        // делаем количество листов в книге
+        App_n.OlePropertySet ("SheetsInNewWorkbook", 1);
+
+        int n_specializ = 0; // специализация
+        int j = 0; // счетчик
+
+        for (int i = 0; i < DM3 -> People_SvodFDQuery -> RecordCount;
+        i++) // формирование листов в зависимости от кол-ва народу!!
+        {
+            fam = DM3 -> People_SvodFDQueryFAM -> Value + String (i + 1);
+
+            App_n.OlePropertyGet ("WorkSheets").OleProcedure ("add");
+            Sh = App_n.OlePropertyGet ("WorkSheets").OlePropertyGet ("Item", 1);
+            Sh.OlePropertySet ("Name", WideString (fam));
+
+            Sh = App_n.OlePropertyGet ("ActiveSheet");
+            str_r = 1;
+
+            int nom = DM3 -> People_SvodFDQueryNOMER -> Value;
+
+            if (n_specializ != DM3 -> People_SvodFDQueryN_SPECIALIZ -> Value) {
+                god_first = uch_god - (DM3 -> People_SvodFDQueryKURS -> Value - 1);
+                n_specializ = DM3 -> People_SvodFDQueryN_SPECIALIZ -> Value;
+                AnsiString sql_2[2] = {
+                    " and ( (Edu_plan.semestr in (1,2) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first) + " ) or \
+               (Edu_plan.semestr in (3,4) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 1) + " ) or \
+               (Edu_plan.semestr in (5,6) and Edu_plan.year_plan=" +
+                        AnsiString (god_first + 2) + " ) or \
+               (Edu_plan.semestr in (7,8) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 3) + " ))",
+
+                    "and ( (Edu_plan.semestr in (1,2) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first) + " ) or \
+               (Edu_plan.semestr in (3,4) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 1) + " ) or \
+               (Edu_plan.semestr in (5,6) and Edu_plan.year_plan=" +
+                        AnsiString (god_first + 2) + " ) or \
+               (Edu_plan.semestr in (7,8) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 3) + " )  or \
+               (Edu_plan.semestr in (9,10) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 4) + " ))"};
+
+                DM3 -> Svod_NadoFDQuery -> Close ();
+                DM3 -> Svod_NadoFDQuery -> SQL -> Clear ();
+                DM3 -> Svod_NadoFDQuery -> SQL -> Add
+                    (sql_1 + sql_2[RadioGroup1 -> ItemIndex] + sql_3);
+                DM3 -> Svod_NadoFDQuery -> ParamByName ("N_FAC") -> AsSmallInt =
+                    nom_fac;
+                DM3 -> Svod_NadoFDQuery -> ParamByName ("VID_EDU") -> AsSmallInt =
+                    RadioGroup1 -> ItemIndex;
+                DM3 -> Svod_NadoFDQuery -> ParamByName ("SPECIALIZ") -> AsInteger =
+                    n_specializ;
+                DM3 -> Count_Svod_NadoFDQuery -> Close ();
+                DM3 -> Count_Svod_NadoFDQuery -> SQL -> Clear ();
+                DM3 -> Count_Svod_NadoFDQuery -> SQL -> Add
+                    (count_sql_1 + sql_2[RadioGroup1 -> ItemIndex] + count_sql_3);
+                DM3 -> Count_Svod_NadoFDQuery -> ParamByName ("N_FAC") -> AsSmallInt =
+                    nom_fac;
+                DM3 -> Count_Svod_NadoFDQuery -> ParamByName ("VID_EDU")
+                    -> AsSmallInt = RadioGroup1 -> ItemIndex;
+                DM3 -> Count_Svod_NadoFDQuery -> ParamByName ("SPECIALIZ")
+                    -> AsInteger = n_specializ;
+                DM3 -> Svod_NadoFDQuery -> Open ();
+                DM3 -> Count_Svod_NadoFDQuery -> Open ();
+                // --------
+                for (int i = 0; i < 6; i++) { // for1
+                    mas_svod_nado[i] =
+                        new AnsiString[DM3 -> Count_Svod_NadoFDQueryCOUNT -> Value];
+                } // end for 1
+
+                j = 0; // счетчик
+                int pr1 = 0; // номер предмета
+                for (int i = 0;
+                i < DM3 -> Count_Svod_NadoFDQueryCOUNT -> Value; i++) { // for2
+
+                    if (pr1 != DM3 -> Svod_NadoFDQueryN_OBJECT -> Value)
+                    { // if следующий предмет
+                        mas_svod_nado[0][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQueryN_OBJECT -> Value);
+                        // номер предмета
+                        mas_svod_nado[1][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQueryZACH_EXAM -> Value);
+                        // вид контроля
+                        mas_svod_nado[2][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQuerySPECKURS -> Value);
+                        // spec_kurs
+                        mas_svod_nado[3][j] =
+                            DM3 -> Svod_NadoFDQueryNAME_OBJECT -> Value;
+                        // название предмета
+                        mas_svod_nado[4][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQueryCLOCK_PLAN_ALL
+                            -> Value);
+                        // Оля общее кол-во часов
+                        mas_svod_nado[5][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQueryCLOCK_PLAN -> Value);
+                        // Дмитрий общее кол-во з.е.
+                        pr1 = DM3 -> Svod_NadoFDQueryN_OBJECT -> Value;
+                        j++;
+                    } // end  if следующий предмет
+                    else { // else этот же предмет и надо разобраться с часами
+                        mas_svod_nado[4][j - 1] =
+                            AnsiString (StrToInt (mas_svod_nado[4][j - 1]) +
+                            DM3 -> Svod_NadoFDQueryCLOCK_PLAN_ALL -> Value); // Оля
+                        mas_svod_nado[5][j - 1] =
+                            AnsiString (FormatFloat ("0.0",
+                            StrToFloat (mas_svod_nado[5][j - 1]) +
+                            DM3 -> Svod_NadoFDQueryCLOCK_PLAN -> Value)); // Дмитрий
+                    } // end else этот же предмет и надо разобраться с часами
+                    DM3 -> Svod_NadoFDQuery -> Next ();
+                } // end for 2
+            }
+
+            // -----начало
+
+            // делаем горизонтальное выравнивание страницы
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                ("CenterHorizontally", true);
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Zoom", false);
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet ("FitToPagesWide", 1);
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet ("FitToPagesTall", 2);
+            // поля
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet ("TopMargin", 46);
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet ("BottomMargin", 46);
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet ("LeftMargin", 52);
+            Sh.OlePropertyGet ("PageSetup").OlePropertySet ("RightMargin", 52);
+
+            // ширина столбца
+            Variant d;
+            d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 1);
+            d.OlePropertySet ("ColumnWidth", 5);
+
+            int srift = 12; // Шрифт для шапочки
+
+            if (j > 73) { // if много предметов
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 2);
+                d.OlePropertySet ("ColumnWidth", 57);
+                srift = 13; // Шрифт для шапочки
+            }
+            else {
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 2);
+                d.OlePropertySet ("ColumnWidth", 57);
+            }
+
+            d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 3);
+            d.OlePropertySet ("ColumnWidth", 13);
+            d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 4);
+            d.OlePropertySet ("ColumnWidth", 10);
+            d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, 5);
+            d.OlePropertySet ("ColumnWidth", 19); // Оля
+
+            // Первая строка
+            Cell_2_Text_Ole2 (1, 5, str_r, false, "TimesNewRoman", 10, false, 4,
+                0, 0, true, false, "Приложение к диплому  A № _____________");
+            str_r++;
+            // Вторая строка
+            Cell_2_Text_Ole2 (1, 5, str_r, false, "TimesNewRoman", srift, true,
+                3, 0, 0, true, false,
+                "ВЫПИСКА ИЗ ЗАЧЕТНО-ЭКЗАМЕНАЦИОННОЙ ВЕДОМОСТИ");
+            str_r++;
+            d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 2, 2);
+            d.OlePropertySet ("RowHeight", 24);
+            // Третья строка
+            Cell_2_Text_Ole2 (1, 5, str_r, false, "TimesNewRoman", srift, false,
+                3, 0, 0, true, false, " (без диплома недействительна)");
+            str_r++;
+            str_r++;
+
+            // Пропустить строку
+            // Определение пола человека
+            AnsiString St1 = "";
+            AnsiString St2 = "";
+            AnsiString St3 = "";
+            AnsiString St4 = "";
+            AnsiString St5 = "";
+            AnsiString St6 = "";
+            AnsiString St7 = "", St8 = "", St9 = "";
+            if (DM3 -> People_SvodFDQueryPOL -> Value == "Ж") {
+                St1 = "выполнила";
+                St2 = "сдала";
+                St3 = "Студентка";
+                St4 = "защитила";
+                St5 = "Выполнила";
+                St6 = "прошла";
+                St7 = "не выполняла";
+                St8 = "изучила"; // для 2012 года
+                St9 = "показала";
+            }
+            else {
+                St1 = "выполнил";
+                St2 = "сдал";
+                St3 = "Студент";
+                St4 = "защитил";
+                St5 = "Выполнил";
+                St6 = "прошел";
+                St7 = "не выполнял";
+                St8 = "изучил"; // для 2012 года
+                St9 = "показал";
+            }
+
+            // Пятая строка
+            AnsiString St = "      ";
+            // переменная формирования текстовой шапочки для выписки к диплому
+            // ФИО
+            St += DM3 -> People_SvodFDQueryFAM -> Value + " " +
+                DM3 -> People_SvodFDQueryNAME -> Value + " " +
+                DM3 -> People_SvodFDQueryOTCH -> Value;
+
+            // Переменная для определения длины строки для ФИО
+            int len_St = St.Length ();
+
+            // куда поступал
+            St += " за время обучения в ";
+            Variant V = SQLTimeStampToDateTime
+                (DM3 -> People_SvodFDQueryD_PRIKAZ_INCLUDE -> Value);
+            AnsiString god_postupl = V.AsType (varString);
+
+            // для студентов других ВУЗов
+            int found_include = DM3 -> People_SvodFDQueryN_FOUND_INCLUDE -> Value;
+
+            switch (found_include) {
+            case 9: // перевод из другого ВУЗа
+                DM3 -> Perevod_VUZFDQuery -> Close ();
+                DM3 -> Perevod_VUZFDQuery -> ParamByName ("NOMER") -> AsInteger =
+                    DM3 -> People_SvodFDQueryNOMER -> Value;
+                DM3 -> Perevod_VUZFDQuery -> Open ();
+                if (!DM3 -> Perevod_VUZFDQuery -> RecordCount)
+                    St += "!!!!! нет приказа перевода из другого ВУЗа !!!! и ";
+                else {
+                    St += DM3 -> Perevod_VUZFDQueryDESCRIBE -> Value + " и ";
+                    V = SQLTimeStampToDateTime
+                        (DM3 -> Perevod_VUZFDQueryD_PUBLIC_PRIKAZ -> Value);
+                }
+                break;
+            case 11: // восстановление из другого ВУЗа
+                DM3 -> Vosstanovlenie_VUZFDQuery -> Close ();
+                DM3 -> Vosstanovlenie_VUZFDQuery -> SQL -> Clear ();
+                DM3 -> Vosstanovlenie_VUZFDQuery -> SQL -> Add ("select * from restore r   \
+                                                   where r.n_cause_restore=17  \
+                                                   and r.vid_restore=0 \
+                                                   and r.NOMER=:NOMER");
+                DM3 -> Vosstanovlenie_VUZFDQuery -> ParamByName ("NOMER")
+                    -> AsInteger = DM3 -> People_SvodFDQueryNOMER -> Value;
+                DM3 -> Vosstanovlenie_VUZFDQuery -> Open ();
+                if (!DM3 -> Vosstanovlenie_VUZFDQuery -> RecordCount)
+                    St += "!!!! нет приказа о восстановлении из другого ВУЗа !!!! и ";
+                else {
+                    St += DM3 -> Vosstanovlenie_VUZFDQueryDESCRIBE -> Value + " и ";
+                    V = SQLTimeStampToDateTime
+                        (DM3 -> Vosstanovlenie_VUZFDQueryD_PRIKAZ_RES -> Value);
+                }
+                break;
+            }
+
+            int date_include = V.AsType (varInteger);
+
+            // ---Галя--- поступал на один факультет, а закончил другой
+            DataModule1 -> Prikaz_LikvidFDQuery -> Close ();
+            DataModule1 -> Prikaz_LikvidFDQuery -> SQL -> Clear ();
+            DataModule1 -> Prikaz_LikvidFDQuery -> SQL -> Add
+                ("SELECT * FROM PRIKAZ_LIKVID WHERE PRIKAZ_LIKVID.NOMER=:NOMER AND (PRIKAZ_LIKVID.N_TYPE_LIKVID=1 OR PRIKAZ_LIKVID.N_TYPE_LIKVID=5) and PRIKAZ_LIKVID.fac_do!=PRIKAZ_LIKVID.fac_po"
+                );
+            DataModule1 -> Prikaz_LikvidFDQuery -> ParamByName ("NOMER") -> AsInteger =
+                DM3 -> People_SvodFDQueryNOMER -> Value;
+            DataModule1 -> Prikaz_LikvidFDQuery -> Open ();
+            if (DataModule1 -> Prikaz_LikvidFDQuery -> RecordCount > 0) {
+                if (date_include) { // if проверки на непустое значение поля
+                    if (date_include <= 33696) // это дата 02.04.1992
+                            St += "Белорусском государственном ордена Трудового Красного Знамени институте физической культуры, далее именуемом учреждением образования ";
+
+                    if (date_include > 33696 && date_include <= 36966)
+                        // это дата c 02.04.1992  по 16.03.2001
+                            St += "Академии физического воспитания и спорта Республики Беларусь, далее именуемой учреждением образования ";
+
+                    if (date_include > 36966 && date_include <= 37978)
+                        // это дата c 16.03.2001  по 23.12.2003
+                            St += "Белорусской государственной академии физической культуры, далее именуемой учреждением образования ";
+
+                    if (date_include > 37978) // это дата после 23.12.2003
+                    {
+                        St += "учреждении образования ";
+                    }
+                } // end if проверки на непустое значение поля
+
+                else
+                    St += "!!!!!!!! У Вас не введена дата поступления в ВУЗ, ";
+
+                // ----
+                St += "\"Белорусский государственный университет физической культуры\" ";
+
+                // факультет
+                switch (DataModule1 -> Prikaz_LikvidFDQueryFAC_DO -> Value) {
+                case 1:
+                    St += "на спортивно-педагогическом факультете спортивных игр и единоборств и ";
+                    break;
+                case 2:
+                    St += "на спортивно-педагогическом факультете массовых видов спорта и ";
+                    break;
+                case 3:
+                    St += "на факультете оздоровительной физической культуры и туризма и ";
+                    break;
+                case 4:
+                    St += "на факультете менеджмента спорта, туризма и гостеприимства Института менеджмента спорта и туризма и ";
+                    break;
+                }
+            }
+            // ----Галя----
+
+            // Оля
+
+            if (date_include) { // if проверки на непустое значение поля
+                if (date_include <= 33696) // это дата 02.04.1992
+                        St += "Белорусском государственном ордена Трудового Красного Знамени институте физической культуры, далее именуемом учреждением образования ";
+
+                if (date_include > 33696 && date_include <= 36966)
+                    // это дата c 02.04.1992  по 16.03.2001
+                        St += "Академии физического воспитания и спорта Республики Беларусь, далее именуемой учреждением образования ";
+
+                if (date_include > 36966 && date_include <= 37978)
+                    // это дата c 16.03.2001  по 23.12.2003
+                        St += "Белорусской государственной академии физической культуры, далее именуемой учреждением образования ";
+
+                // исправила Оля для ИТ
+                if (date_include > 37978)
+                    // это дата после 23.12.2003
+                {
+                    St += "учреждении образования ";
+                }
+
+            } // end if проверки на непустое значение поля
+
+            else
+                St += "!!!!!!!! У Вас не введена дата поступления в ВУЗ, ";
+
+            // ----
+            St += "\"Белорусский государственный университет физической культуры\" ";
+
+            // if (nom_fac==4) St+="Институт туризма, ";
+
+            // факультет
+            switch (nom_fac) {
+            case 1:
+                St += "на спортивно-педагогическом факультете спортивных игр и единоборств с ";
+                break;
+            case 2:
+                St += "на спортивно-педагогическом факультете массовых видов спорта с ";
+                break;
+            case 3:
+                St += "на факультете оздоровительной физической культуры и туризма с ";
+                break;
+            case 4:
+                St += "на факультете менеджмента спорта, туризма и гостеприимства Института менеджмента спорта и туризма с ";
+                break;
+                // case 4: St+="на факультете туризма и гостеприимства института туризма с "; break;
+            }
+            // года обучения в ВУЗе
+            if (date_include)
+                St += god_postupl.SubString (7, 4) + " года по " +
+                    IntToStr (uch_god + 1) + " год ";
+            else {
+                St += AnsiString (god_first);
+                St += " года  по " + IntToStr (uch_god + 1) + " год ";
+            }
+
+            // специализация или направление специальности
+
+            if (DM3 -> People_SvodFDQueryN_SPEC -> Value == 1)
+            { // if специальность физическая культура и спорт
+                // специальность
+                St += DM3 -> People_SvodFDQuerySPEC -> Value;
+                St += "\", специализации ";
+                St += "\"";
+                if (nom_fac == 1 || nom_fac == 2) {
+                    St += "Тренерская работа по ";
+                }
+                St += DM3 -> People_SvodFDQuerySPECIAL_SKLON -> Value;
+            } // end if специальность физическая культура и спорт
+            else { // else другие новые специальности
+                if (DM3 -> People_SvodFDQueryN_SPEC -> Value == 10 &&
+                    DM3 -> People_SvodFDQueryVID_EDU -> Value == 0) {
+                    St += "по специальности \"Туризм и гостеприимство\", специализации \""
+                        + DM3 -> People_SvodFDQuerySPECIAL_DIRECTION -> Value
+                        + "\"";
+                }
+                else
+                    St += "по специальности \"" +
+                        DM3 -> People_SvodFDQuerySPECIAL_DIRECTION -> Value + "\"";
+            } // else другие новые специальности
+
+            St += " " + St8 + " дисциплины и " + St9 + " следующие знания:";
+
+            Cell_2_Text_Ole2 (1, 5, str_r, false, "TimesNewRoman", srift, false,
+                6, 1, 0, true, true, St);
+
+            // конец текстовой вставки
+
+            // Установить в выделенной ячейке с позиции Start длинной Length другой шрифт
+            d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", str_r, 1);
+            d.OlePropertyGet ("Characters", 1, len_St).OlePropertyGet ("Font")
+                .OlePropertySet ("FontStyle", L"полужирный");
+
+            // установка высоты строки
+            if (nom_fac == 4) {
+            d.OlePropertySet ("RowHeight", 85);
+            } else
+            d.OlePropertySet ("RowHeight", 70);
+            str_r++;
+
+            // определяем сквозные строки
+            /* AnsiString temp_text = "$" + AnsiString (str_r) + ":$" +
+             AnsiString (str_r);
+             Sh.OlePropertyGet ("PageSetup").OlePropertySet ("PrintTitleRows",
+             WideString (temp_text)); */
+
+            // Шапка
+            Shapka_Diplom (
+                "Названия изученных и аттестованных учебных дисциплин", true);
+            str_r++;
+
+            nom_predmet = 1; // счетчик предметов
+
+            create_vid_control (nom, j, "2", 0); // экзамены
+            create_vid_control (nom, j, "3", 0); // диф.зачеты
+            create_vid_control (nom, j, "1", 0); // зачеты
+            create_vid_control (nom, j, "0", 0);
+            str_r++;
+
+            // Студент (ка) ФИО выполнил (а)
+            /* Cell_2_Text_Ole2 (1,4,str_r,false,"Arial",12,false,0,2,0,true,false,
+             St3+" "+DM3 -> People_SvodFAM -> Value+" "+DM3 -> People_SvodNAME -> Value+
+             " "+DM3 -> People_SvodOTCH -> Value); */
+            // str_r++;
+
+            // спецкурсы
+            int spec = 0;
+            for (int i = 0; i < DM3 -> Count_Svod_NadoFDQueryCOUNT -> Value; i++) {
+                if (mas_svod_nado[2][i] == 1)
+                    spec++;
+            }
+            if (spec != 0)
+                // проверяем, т.к. не у всех факультетов есть спецкурсы
+            {
+                if (RadioGroup1 -> ItemIndex == 0)
+                { // if спецкурсы только для дневного
+                    // Cell_2_Text_Ole2 (1,4,str_r,false,"TimesNewRoman",12,false,0,2,0,true,false,St1+" спецкурсы:"); str_r++;
+                    // Шапка
+                    Shapka_Diplom (
+                        "Названия изученных и аттестованных спецкурсов", true);
+                    str_r++;
+                    nom_predmet = 1; // счетчик предметов
+                    create_vid_control (nom, j, "2", 1); // экзамены
+                    create_vid_control (nom, j, "3", 1); // диф.зачеты
+                    create_vid_control (nom, j, "1", 1); // зачеты
+                    create_vid_control (nom, j, "0", 1);
+                    str_r++;
+                } // end if спецкурсы только для дневного
+            }
+
+            // Курсовые работы
+            // Cell_2_Text_Ole2 (1,4,str_r,false,"TimesNewRoman",12,false,0,2,0,true,false,St4+" курсовые работы:");  str_r++;
+            // Шапка
+            // Shapka_Diplom ("Названия курсовых работ (проектов)",false);
+            Shapka_Diplom ("Названия учебных дисциплин по выполненным и" + tab +
+                "аттестованным курсовым работам", true);
+            str_r++;
+            // часы для курсовой работы Оля
+            nom_predmet = 1; // счетчик предметов
+            create_vid_control (nom, j, "2", 2); // экзамены
+            create_vid_control (nom, j, "3", 2); // диф.зачеты
+            create_vid_control (nom, j, "1", 2); // зачеты
+            create_vid_control (nom, j, "0", 2);
+            str_r++;
+            // Практика
+            // Cell_2_Text_Ole2 (1,4,str_r,false,"TimesNewRoman",12,false,0,2,0,true,false,St6+" и "+St4+" практики:");  str_r++;
+
+            // Шапка
+            Shapka_Diplom ("Названия пройденных и аттестованных практик", true);
+            str_r++;
+            nom_predmet = 1; // счетчик предметов
+            create_vid_control (nom, j, "2", 3); // экзамены
+            create_vid_control (nom, j, "3", 3); // диф.зачеты
+            create_vid_control (nom, j, "1", 3); // зачеты
+            create_vid_control (nom, j, "0", 3);
+            str_r++;
+            // }
+            // else   str_r++;
+
+            // Шапка
+            Shapka_Diplom ("Названия изученных и аттестованных факультативов",
+                true);
+            str_r++;
+            nom_predmet = 1; // счетчик предметов
+            create_vid_control (nom, j, "2", 4); // экзамены
+            create_vid_control (nom, j, "3", 4); // диф.зачеты
+            create_vid_control (nom, j, "1", 4); // зачеты
+            create_vid_control (nom, j, "0", 4);
+            str_r++;
+
+            // Шапка
+            Shapka_Diplom ("Названия учебных дисциплин, по которым" + tab +
+                "сданы государственные экзамены", true);
+            str_r++;
+            nom_predmet = 1; // счетчик предметов
+            create_vid_control (nom, j, "4", 5); // экзамены
+            create_vid_control (nom, j, "5", 5); // экзамены
+            str_r++;
+
+            if (thema_diplom != "" && ochenka_diplom != "")
+            { // получение темы диплома
+
+                // Исправила Оля
+                Cell_2_Text_Ole2 (1, 5, str_r, false, "Arial", 12, false, 0, 2,
+                    0, true, false, St5 + " дипломную работу на тему:");
+                str_r++;
+
+                Cell_2_Text_Ole2 (1, 5, str_r, false, "Arial", 12, false, 0, 2,
+                    0, true, true, "\"" + thema_diplom + "\"");
+                // Выделяем диапазон для изменения высоты строки
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", str_r, 1);
+                // установка высоты строки
+                d.OlePropertySet ("RowHeight", 40);
+                d.OlePropertyGet ("Font").OlePropertySet ("Italic", True);
+                d.OlePropertyGet ("Font").OlePropertySet ("Underline", 2);
+                // Получение оценки
+                AnsiString two_str = "и " + St4 + " с отметкой ";
+                int dlina = two_str.Length ();
+                str_r++;
+                // Выделяем диапазон
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", str_r, 1);
+                Cell_2_Text_Ole2 (1, 5, str_r, false, "Arial", 12, false, 0, 2,
+                    0, true, false, two_str + ochenka_diplom + ".");
+                d.OlePropertyGet ("Characters", dlina,
+                    ochenka_diplom.Length () + 1).OlePropertyGet ("Font")
+                    .OlePropertySet ("Italic", True);
+                d.OlePropertyGet ("Characters", dlina,
+                    ochenka_diplom.Length () + 1).OlePropertyGet ("Font")
+                    .OlePropertySet ("Underline", 2);
+                str_r++;
+                str_r++;
+                str_r++;
+
+            } // if
+            /* else { // нет диплома
+
+             // Исправила Оля
+             AnsiString dip_net = St5 + " дипломную работу на тему: ";
+             int dl = dip_net.Length ();
+             // Выделяем диапазон
+             d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", str_r, 1);
+             Cell_2_Text_Ole2 (1, 5, str_r, false, "Arial", 12, false, 0, 2,
+             0, true, false, dip_net + St7);
+             d.OlePropertyGet ("Characters", dl, St7.Length () + 1)
+             .OlePropertyGet ("Font").OlePropertySet ("Italic", True);
+             d.OlePropertyGet ("Characters", dl, St7.Length () + 1)
+             .OlePropertyGet ("Font").OlePropertySet ("Underline", 2);
+
+             // Border_IndentLeft (1,4,str_r,str_r, false, 4, 0);//обрамление ячейки по низу
+             // Cell_2_Text_Ole2 (1,4,str_r,false,"Arial",12,false,0,0,0,false,false,"и "+St4+" с отметкой _______________ ");
+             str_r++;
+             str_r++;
+             str_r++;
+             } */
+
+            // очищение
+            thema_diplom == ""; // тема дипломного проекта
+            ochenka_diplom = ""; // оценка по дипломному проекту
+
+            // Остальной бред
+            // Cell_2_Text_Ole2 (1,1,str_r+3,false,"Arial",12,true,0,0,0,false,false,"М.П. ");
+            // Cell_2_Text_Ole2 (1,1,str_r+7,false,"Arial",10,false,0,0,0,false,false,"г.Минск");
+
+            str_r++;
+
+            AnsiString data_full = DateToStr (DateTimePicker1 -> Date);
+            AnsiString month = data_full.SubString (4, 2);
+            switch (StrToInt (month)) { // switch
+            case 1:
+                month = " января ";
+                break;
+            case 2:
+                month = " февраля ";
+                break;
+            case 3:
+                month = " марта ";
+                break;
+            case 4:
+                month = " апреля ";
+                break;
+            case 5:
+                month = " мая ";
+                break;
+            case 6:
+                month = " июня ";
+                break;
+            case 7:
+                month = " июля ";
+                break;
+            case 8:
+                month = " августа ";
+                break;
+            case 9:
+                month = " сентября ";
+                break;
+            case 10:
+                month = " октября ";
+                break;
+            case 11:
+                month = " ноября ";
+                break;
+            case 12:
+                month = " декабря ";
+                break;
+            } // end switch
+            // Cell_2_Text_Ole2 (4,4,str_r+6,false,"Arial",10,false,0,0,0,false,false,"\""+data_full.SubString (1,2)+"\""+month+data_full.SubString (7,4)+" г.");
+            Cell_2_Text_Ole2 (1, 1, str_r + 6, false, "Arial", 10, false, 0, 0,
+                0, false, false, "г.Минск  \"" + data_full.SubString (1, 2) +
+                "\"" + month + data_full.SubString (7, 4) + " г.");
+
+            Cell_2_Text_Ole2 (1, 1, str_r, false, "Arial", 11, true, 0, 0, 0,
+                false, false, "Руководитель учреждения образования ");
+            Cell_2_Text_Ole2 (4, 4, str_r, false, "Arial", 11, true, 0, 0, 0,
+                false, false, "С.Б.Репкин");
+            str_r++;
+            Cell_2_Text_Ole2 (2, 2, str_r, false, "Arial", 11, false, 0, 0, 0,
+                false, false,
+                "                                                                        М.П. ");
+            str_r++;
+
+            // if (nom_fac==4)
+            // Cell_2_Text_Ole2 (2,2,str_r,false,"Arial",12,true,0,0,0,false,false,"              Директор Института туризма");
+
+            Cell_2_Text_Ole2 (1, 1, str_r, false, "Arial", 11, true, 0, 0, 0,
+                false, false, "Декан факультета ");
+
+            AnsiString dec_f = "", met_f = "";
+            int v_edu = DM3 -> People_SvodFDQueryVID_EDU -> Value;
+            switch (nom_fac) { // switch декан факультета
+            case 1:
+                dec_f = "В.И.Новицкая";
+                if (v_edu == 1)
+                    met_f = "А.А.Трапкова";
+                else
+                    met_f = "К.В.Дворецкая";
+                break;
+            case 2:
+                dec_f = "И.И.Гуслистова";
+                if (v_edu == 1)
+                    met_f = "О.Н.Шабанова";
+                else
+                    met_f = "Т.А.Молош";
+                break;
+            case 3:
+                dec_f = "Н.М.Машарская";
+                if (v_edu == 1) {
+                    if (DM3 -> People_SvodFDQueryKURS -> Value == 6)
+                        met_f = "О.Н.Хмель";
+                    else
+                        met_f = "О.Н.Хмель";
+                }
+                else
+                    met_f = "С.М.Химиченко";
+                break;
+            case 4:
+                dec_f = "О.Н.Михайлова";
+                if (v_edu == 1)
+                    met_f = "К.И.Липницкая";
+                else
+                    met_f = "А.Л.Зеновко";
+                break;
+            }
+            Cell_2_Text_Ole2 (4, 4, str_r, false, "Arial", 11, true, 0, 0, 0,
+                false, false, dec_f);
+            str_r++;
+            str_r++;
+            Cell_2_Text_Ole2 (1, 1, str_r, false, "Arial", 11, true, 0, 0, 0,
+                false, false, "Секретарь факультета");
+            Cell_2_Text_Ole2 (4, 4, str_r, false, "Arial", 11, true, 0, 0, 0,
+                false, false, met_f);
+            str_r++;
+            str_r++;
+            // str_r++; str_r++;  str_r++; str_r++;
+            // Cell_2_Text_Ole2 (3,3,str_r,false,"Arial",10,false,4,0,0,false,false,"Регистрационный №");
+
+            Cell_2_Text_Ole2 (4, 4, str_r, false, "Arial", 10, false, 4, 0, 0,
+                false, false, "Регистрационный №");
+
+            AnsiString reg = ""; // регистрационный номер
+            // Шаблон   0810/       08-год выпуска,  1 (1.2.0.4) факультет, 0 (0.1) вид обучения
+            reg = AnsiString (uch_god + 1).SubString (3, 2);
+            if (nom_fac != 3)
+                reg += AnsiString (nom_fac);
+            else
+                reg += "0"; // факультет ОФКиТ
+            reg += AnsiString (RadioGroup1 -> ItemIndex);
+            reg += "/";
+
+            Cell_2_Text_Ole2 (5, 5, str_r, false, "Arial", 10, false, 0, 0, 0,
+                false, false, reg);
+            Border_IndentLeft (5, 5, str_r, str_r, false, 4, 0);
+            // обрамление ячейки по низу
+            str_r++;
+            str_r++;
+
+            DM3 -> People_SvodFDQuery -> Next ();
+        }
+        // App_n.OlePropertySet ("Visible", True);
+        App_n.Clear ();
+        Sh.Clear ();
+        for (int i = 0; i < 5; i++)
+            delete[]mas_svod_nado[i];
+
+    } // end if MyList1 -> Execute
+
+}
+
+void __fastcall TDiplomForm::RxCheckListBox1Click (TObject *Sender) {
+    Panel3 -> Visible = true;
+    RadioGroup3 -> Visible = true;
+    Label1 -> Visible = true;
+    DateTimePicker1 -> Visible = true;
+
+}
+
+void __fastcall TDiplomForm::RadioGroup3Click (TObject *Sender)
+{ // по умолчаниюд предлагает десятибальную систему
+    switch (RadioGroup3 -> ItemIndex)
+    { // switch переключение между системами оценок
+    case 0:
+        syst_ball = 10; // десятибальная система
+        break;
+    case 1:
+        syst_ball = 5; // пятибальная система
+        break;
+    } // end switch переключение между системами оценок
+}
+
+void __fastcall TDiplomForm::BitBtn2Click (TObject *Sender)
+{ // Выдача сводной ведомости
+    AnsiString inc_gr = DM3 -> Check_Return_Group (RadioGroup1 -> ItemIndex,
+        CheckListBox1);
+    if (inc_gr == "") { // проверка на вшивость
+        ShowMessage ("Вы не выбрали номер группы!");
+        return;
+    }
+
+    DM3 -> Name_SpecFDQuery -> Close ();
+    DM3 -> Name_SpecFDQuery -> SQL -> Clear ();
+    DM3 -> Name_SpecFDQuery -> SQL -> Add ("SELECT Distinct ( Specializ.N_SPECIALIZ), Specializ.SPECIAL \
+FROM PEOPLE People \
+   INNER JOIN INCREMENT_GROUP Increment_group \
+   ON  (People.INC_GROUP = Increment_group.INC_GROUP)  \
+   INNER JOIN FACULTY Faculty \
+   ON  (People.N_FAC = Faculty.N_FAC)  \
+   INNER JOIN SPECIALIZ Specializ  \
+   ON  (People.N_SPECIALIZ = Specializ.N_SPECIALIZ) \
+where (People.STATUS_PEOPLE=1) and (People.INC_GROUP in (" + inc_gr + ")) \
+and (People.N_FAC=" + nom_fac + ") \
+ORDER BY Specializ.N_SPECIALIZ");
+    DM3 -> Name_SpecFDQuery -> Open ();
+
+    // Формирование входного массива специализаций
+    AnsiString *mas_spec[2]; // массив номеров и названий специализаций
+    for (int i = 0; i < 2; i++)
+        mas_spec[i] = new AnsiString[DM3 -> Name_SpecFDQuery -> RecordCount];
+    //////////////////////////////////////////////////////////////////////////
+    DualListDlg = new TDualListDlg (this);
+    DualListDlg -> SrcList -> Items -> Clear ();
+    DualListDlg -> DstList -> Items -> Clear ();
+    // Мой компонент
+    for (int i = 0; i < DM3 -> Name_SpecFDQuery -> RecordCount; i++) {
+        mas_spec[0][i] = DM3 -> Name_SpecFDQuerySPECIAL -> Value;
+        DualListDlg -> SrcList -> Items -> AddObject (mas_spec[0][i],
+            (TObject *) (DM3 -> Name_SpecFDQueryN_SPECIALIZ -> Value));
+        mas_spec[1][i] = AnsiString (DM3 -> Name_SpecFDQueryN_SPECIALIZ -> Value);
+        DM3 -> Name_SpecFDQuery -> Next ();
+    } // for
+
+    DualListDlg -> ShowModal ();
+
+    if (DataModule2 -> printdlg == true) { // if MyList1 -> Execute
+        AnsiString Str_Nomer = "";
+        for (int i = 0; i <= DualListDlg -> DstList -> Items -> Count - 1; i++) {
+            Str_Nomer +=
+                String ( (int) (DualListDlg -> DstList -> Items -> Objects[i])) + ",";
+            // возвращаем номер специализации
+        } // 1-ый for
+        delete DualListDlg;
+        Str_Nomer.SetLength (Str_Nomer.Length () - 1);
+
+        DM3 -> People_SvodReport_SpecFDQuery -> Close ();
+        DM3 -> People_SvodReport_SpecFDQuery -> SQL -> Clear ();
+        DM3 -> People_SvodReport_SpecFDQuery -> SQL -> Add ("SELECT People.NOMER, People.FAM, People.NAME, \
+   People.OTCH, People.VID_EDU, People.N_FAC, People.KURS, People.N_SPEC, People.N_SPECIALIZ, \
+   People.N_PRIKAZ_KURS, People.N_GROUP, People.STATUS_PEOPLE, People.INC_GROUP, \
+   People.N_ZACHET, Increment_group.VID_EDU, Increment_group.GOD, Increment_group.N_GROUP, \
+   Faculty.FAC1, Specializ.SPECIAL, Specializ.Special_Direction \
+   FROM PEOPLE People \
+   INNER JOIN INCREMENT_GROUP Increment_group  \
+   ON  (People.INC_GROUP = Increment_group.INC_GROUP) \
+   INNER JOIN FACULTY Faculty \
+   ON  (People.N_FAC = Faculty.N_FAC) \
+   INNER JOIN SPECIALIZ Specializ  \
+   ON  (People.N_SPECIALIZ = Specializ.N_SPECIALIZ) \
+   where (People.STATUS_PEOPLE=1) and (People.INC_GROUP in (" + inc_gr + ")) \
+   and (People.N_FAC=" + nom_fac + ")  and (People.N_SPECIALIZ in (" +
+            Str_Nomer + "))\
+   ORDER BY People.N_SPECIALIZ, People.INC_GROUP,People.FAM, People.NAME, People.OTCH"
+            );
+        /* where (People.STATUS_PEOPLE=1) and (People.INC_GROUP in (" + inc_gr + ")) \
+         and (People.N_FAC=" + nom_fac + ")  and (People.N_SPECIALIZ in (" +
+         Str_Nomer + ")) */
+        DM3 -> People_SvodReport_SpecFDQuery -> Open ();
+
+        // запускаем  Exel
+        DataModule1 -> ExelInit ();
+        // делаем количество листов в книге
+
+        App_n.OlePropertySet ("SheetsInNewWorkbook", 1);
+
+        int n_specializ = 0; // специализация
+        int j = 0; // счетчик  количества предметов
+        int nnn = 1; // счетчик количества людей на специализации
+        AnsiString grup = ""; // группа
+        int stolbec = 0;
+        for (int i = 0;
+        i < DM3 -> People_SvodReport_SpecFDQuery -> RecordCount;
+        i++) // формирование листов в зависимости от кол-ва народу!!
+        { // for
+
+            if (n_specializ != DM3 -> People_SvodReport_SpecFDQueryN_SPECIALIZ
+                -> Value) {
+                // if n_specializ!=DM3 -> People_SvodReport_SpecN_SPECIALIZ -> Value
+                n_specializ =
+                    DM3 -> People_SvodReport_SpecFDQueryN_SPECIALIZ -> Value;
+
+                App_n.OlePropertyGet ("WorkSheets").OleProcedure ("add");
+                Sh = App_n.OlePropertyGet ("WorkSheets").OlePropertyGet
+                    ("Item", 1);
+
+                // делаем горизонтальное выравнивание страницы
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Orientation", 2);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("CenterHorizontally", true);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Zoom", false);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("FitToPagesWide", 1);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("FitToPagesTall", 2);
+                //
+
+                nnn = 1; // счетчик количества людей на специализации
+                AnsiString name_spec =
+                    DM3 -> People_SvodReport_SpecFDQuerySPECIAL -> Value;
+                if (name_spec.Length () > 24)
+                { // if длина названия большая то урезаем ее до 30 символов
+                    name_spec = name_spec.SubString (1, 20);
+                } // end if длина названия большая то урезаем ее до 30 символов
+
+                Sh.OlePropertySet ("Name", WideString (name_spec));
+                Sh = App_n.OlePropertyGet ("ActiveSheet");
+
+                str_r = 1;
+
+                god_first =
+                    uch_god -
+                    (DM3 -> People_SvodReport_SpecFDQueryKURS -> Value - 1);
+
+                AnsiString sql_2[2] = {
+                    " and ( (Edu_plan.semestr in (1,2) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first) + " ) or \
+               (Edu_plan.semestr in (3,4) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 1) + " ) or \
+               (Edu_plan.semestr in (5,6) and Edu_plan.year_plan=" +
+                        AnsiString (god_first + 2) + " ) or \
+               (Edu_plan.semestr in (7,8) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 3) + " ))",
+                    // (Edu_plan.semestr in (9,10) and  Edu_plan.year_plan="+AnsiString (god_first+4)+" ))",
+
+                    "and ( (Edu_plan.semestr in (1,2) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first) + " ) or \
+               (Edu_plan.semestr in (3,4) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 1) + " ) or \
+               (Edu_plan.semestr in (5,6) and Edu_plan.year_plan=" +
+                        AnsiString (god_first + 2) + " ) or \
+               (Edu_plan.semestr in (7,8) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 3) + " )  or \
+               (Edu_plan.semestr in (9,10) and  Edu_plan.year_plan=" +
+                        AnsiString (god_first + 4) + " ))"};
+                // (Edu_plan.semestr in (11,12) and  Edu_plan.year_plan="+AnsiString (god_first+5)+" ))"};
+
+                DM3 -> Svod_NadoFDQuery -> Close ();
+                DM3 -> Svod_NadoFDQuery -> SQL -> Clear ();
+                DM3 -> Svod_NadoFDQuery -> SQL -> Add
+                    (sql_1 + sql_2[RadioGroup1 -> ItemIndex] + sql_s_ved + sql_3);
+                /* DM3 -> Svod_NadoFDQuery -> SQL -> Add
+                 (sql_1 + sql_2[RadioGroup1 -> ItemIndex] + sql_3); */
+                DM3 -> Svod_NadoFDQuery -> ParamByName ("N_FAC") -> AsSmallInt =
+                    nom_fac;
+                DM3 -> Svod_NadoFDQuery -> ParamByName ("VID_EDU") -> AsSmallInt =
+                    RadioGroup1 -> ItemIndex;
+                DM3 -> Svod_NadoFDQuery -> ParamByName ("SPECIALIZ") -> AsInteger =
+                    n_specializ;
+                DM3 -> Svod_NadoFDQuery -> Open ();
+                DM3 -> Count_Svod_NadoFDQuery -> Close ();
+                DM3 -> Count_Svod_NadoFDQuery -> SQL -> Clear ();
+                DM3 -> Count_Svod_NadoFDQuery -> SQL -> Add
+                    (count_sql_1 + sql_2[RadioGroup1 -> ItemIndex] + count_sql_3);
+                DM3 -> Count_Svod_NadoFDQuery -> ParamByName ("N_FAC") -> AsSmallInt =
+                    nom_fac;
+                DM3 -> Count_Svod_NadoFDQuery -> ParamByName ("VID_EDU")
+                    -> AsSmallInt = RadioGroup1 -> ItemIndex;
+                DM3 -> Count_Svod_NadoFDQuery -> ParamByName ("SPECIALIZ")
+                    -> AsInteger = n_specializ;
+                DM3 -> Count_Svod_NadoFDQuery -> Open ();
+                // --------
+                for (int i = 0; i < 5; i++) { // for1
+                    mas_svod_nado[i] =
+                        new AnsiString[DM3 -> Count_Svod_NadoFDQueryCOUNT -> Value];
+                } // end for 1
+
+                j = 0; // счетчик
+                int pr1 = 0; // номер предмета
+                for (int i = 0;
+                i < DM3 -> Count_Svod_NadoFDQueryCOUNT -> Value; i++) { // for2
+
+                    if (pr1 != DM3 -> Svod_NadoFDQueryN_OBJECT -> Value) {
+                        mas_svod_nado[0][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQueryN_OBJECT -> Value);
+                        // номер предмета
+                        mas_svod_nado[1][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQueryZACH_EXAM -> Value);
+                        // вид контроля
+                        mas_svod_nado[2][j] =
+                            AnsiString (DM3 -> Svod_NadoFDQuerySPECKURS -> Value);
+                        // spec_kurs
+                        mas_svod_nado[3][j] =
+                            DM3 -> Svod_NadoFDQueryNAME_OBJECT -> Value;
+                        // название предмета
+                        mas_svod_nado[4][j] = "";
+                        // колонка в Excel заполнится позже
+                        pr1 = DM3 -> Svod_NadoFDQueryN_OBJECT -> Value;
+                        j++;
+                    }
+                    DM3 -> Svod_NadoFDQuery -> Next ();
+                } // end for 2
+
+                // Поместить текст
+                AnsiString temp_text = "";
+
+                // -------  проверка на выпускной курс 4 (дневного) или 5 (заочного)
+
+                if ( (!RadioGroup1 -> ItemIndex && RadioGroup2 -> ItemIndex == 3) ||
+                    (RadioGroup1 -> ItemIndex && RadioGroup2 -> ItemIndex == 4))
+                { // if выпускной курс
+                    temp_text = "Сводная ведомость выпускного курса " +
+                        AnsiString (uch_god + 1) + " года";
+                    stolbec = j;
+                } // end if выпускной курс
+                else { // else другие курсы
+                    temp_text =
+                        "Сводная ведомость по предметам по состоянию на " +
+                        AnsiString (uch_god) + "/" + AnsiString (uch_god + 1) +
+                        " учебный год";
+                    stolbec = j + 2;
+                } // end else другие курсы
+                // -------
+                Cell_2_Text_Ole2 (1, stolbec, str_r, false, "Arial", 12, true, 3,
+                    2, 0, true, false, temp_text);
+                str_r++;
+
+                // Определение формы обучения
+                if (!RadioGroup1 -> ItemIndex)
+                    temp_text = "дневной формы получения образования";
+                else
+                    temp_text = "заочной формы получения образования";
+                Cell_2_Text_Ole2 (1, stolbec, str_r, false, "Arial", 12, true, 3,
+                    2, 0, true, false, temp_text);
+                str_r++;
+
+                // Определение названия факультета
+                switch (nom_fac) {
+                case 1:
+                    temp_text =
+                        "спортивно-педагогического факультета спортивных игр и единоборств ";
+                    break;
+                case 2:
+                    temp_text =
+                        "спортивно-педагогического факультета массовых видов спорта ";
+                    break;
+                case 3:
+                    temp_text =
+                        "факультета оздоровительной физической культуры и туризма ";
+                    break;
+                case 4:
+                    temp_text =
+                        "факультета менеджмента спорта, туризма и гостеприимства ";
+                    break;
+                }
+                Cell_2_Text_Ole2 (1, stolbec, str_r, false, "Arial", 12, true, 3,
+                    2, 0, true, false, temp_text);
+                str_r++;
+
+                // Определение названия специализации или направление специальности
+                if (DM3 -> People_SvodReport_SpecFDQueryN_SPEC -> Value == 1) {
+                    temp_text = "Специализация - " +
+                        DM3 -> People_SvodReport_SpecFDQuerySPECIAL -> Value;
+                }
+                else {
+                    if ( (nom_fac == 4 && RadioGroup1 -> ItemIndex == 0 &&
+                        RadioGroup2 -> ItemIndex == 0) ||
+                        (nom_fac == 4 && RadioGroup1 -> ItemIndex == 0 &&
+                        RadioGroup2 -> ItemIndex == 1) ||
+                        (nom_fac == 4 && RadioGroup1 -> ItemIndex == 1)) {
+                        temp_text = "специальность - ";
+                    }
+                    else
+                        temp_text = "направление специальности - ";
+                    temp_text +=
+                        DM3 -> People_SvodReport_SpecFDQuerySPECIAL_DIRECTION -> 
+                        Value;
+                }
+                Cell_2_Text_Ole2 (1, stolbec, str_r, false, "Arial", 12, true, 3,
+                    2, 0, true, false, temp_text);
+                str_r++;
+                str_r++;
+
+                // Шапка
+                // № п/п
+                // объединяем
+                // установка первой и последней ячейки для диапазона
+                AnsiString diap = mas_column[0] + str_r + ":" + mas_column[0] +
+                    (str_r + 2);
+
+                // диапазон
+                Variant Rang1 = App_n.OlePropertyGet ("Range", WideString (diap));
+                Rang1.OleProcedure ("Merge");
+                DataModule1 -> ExBorder (Rang1);
+                Cell_2_Text_Ole2 (1, 1, str_r, true, "Arial", 10, false, 3, 2, 0,
+                    true, false, "№ п/п");
+
+                // ФИО
+                // объединяем
+                diap = mas_column[1] + str_r + ":" + mas_column[1] +
+                    (str_r + 2);
+                Rang1 = App_n.OlePropertyGet ("Range", WideString (diap));
+                Rang1.OleProcedure ("Merge");
+                DataModule1 -> ExBorder (Rang1);
+                Cell_2_Text_Ole2 (2, 2, str_r, true, "Arial", 10, false, 3, 2, 0,
+                    true, false, "ФИО");
+
+                // предметы
+                Cell_2_Text_Ole2 (3, stolbec, str_r, true, "Arial", 10, false, 3,
+                    2, 0, true, false, "Предметы");
+                str_r++;
+
+                nom_predmet = 1; // счетчик предметов
+                // функция для занесения предметов в сводную ведомость
+
+                // экзамены
+                Predmet_svod (j, "2", 0);
+
+                // диф.зачеты
+                Predmet_svod (j, "3", 0);
+
+                // Курсовые работы
+                Predmet_svod (j, "2", 1);
+
+                // Практика
+                Predmet_svod (j, "3", 1);
+
+                // зачеты
+                Predmet_svod (j, "1", 0);
+                Predmet_svod (j, "0", 0);
+
+                // факультативы (раньше были только на дневном) Оля
+                Predmet_svod (j, "4", 1);
+
+                // факультативы по выбору
+                Predmet_svod (j, "5", 1);
+
+                // спецкурсы
+                if (!RadioGroup1 -> ItemIndex)
+                { // if спецкурсы только для дневного
+                    Predmet_svod (j, "1", 1);
+                } // end if спецкурсы только для дневного
+
+                // факультативы
+                /* if (!RadioGroup1 -> ItemIndex)
+                 {//if факультативы только для дневного
+                 Predmet_svod (j, "4", 1);
+                 } */
+
+                DataModule1 -> ExAutoFit (3, j + 2);
+
+                str_r++;
+                grup = "";
+            } // end if n_specializ!=DM3 -> People_SvodReport_SpecN_SPECIALIZ -> Value
+            str_r++;
+
+            if (grup != DM3 -> People_SvodReport_SpecFDQueryN_GROUP -> Value) {
+                grup = DM3 -> People_SvodReport_SpecFDQueryN_GROUP -> Value;
+                Cell_2_Text_Ole2 (1, stolbec, str_r, true, "Arial", 12, true, 3,
+                    2, 0, true, false, grup + " группа");
+                str_r++;
+            }
+
+            int nomer_s = DM3 -> People_SvodReport_SpecFDQueryNOMER -> Value;
+
+            // -----начало
+            DM3 -> Detail_Svod_RealFDQuery -> Close ();
+            DM3 -> Detail_Svod_RealFDQuery -> SQL -> Clear ();
+            DM3 -> Detail_Svod_RealFDQuery -> SQL -> Add ("SELECT Object_plan.N_OBJECT, Object_plan.NAME_OBJECT, \
+      Edu_plan.N_PLAN, Edu_plan.SEMESTR, Edu_plan.CLOCK_PLAN, Edu_plan.CLOCK_PLAN_ALL,\
+      Edu_plan.YEAR_PLAN, Edu_plan.N_FAC, Edu_plan.ZACH_EXAM, \
+      Edu_plan.VID_EDU_PLAN, Edu_plan.SPECKURS, \
+      Result_ball.RESULT, \
+      Result_ball.DATE_RESULT, Result_ball.STATUS_RESULT, \
+      People.NOMER, People.FAM, People.NAME, People.OTCH, People.STATUS_PEOPLE  \
+      FROM EDU_PLAN Edu_plan \
+      INNER JOIN OBJECT_PLAN Object_plan \
+         ON  (Edu_plan.N_OBJECT = Object_plan.N_OBJECT) \
+         INNER JOIN RESULT_BALL Result_ball \
+         ON  (Edu_plan.N_PLAN = Result_ball.N_PLAN)  \
+         INNER JOIN PEOPLE People  \
+         ON  (Result_ball.NOMER =  people.nomer) \
+      where (People.STATUS_PEOPLE=1)and People.NOMER=" + AnsiString (nomer_s) +
+                " order by edu_plan.n_object, Edu_plan.SEMESTR desc, edu_plan.zach_exam desc");
+            DM3 -> Detail_Svod_RealFDQuery -> Open ();
+
+            // № п/п
+            Cell_2_Text_Ole2 (1, 1, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false, nnn);
+
+            // ФИО
+            Cell_2_Text_Ole2 (2, 2, str_r, true, "Arial", 10, false, 0, 2, 0,
+                false, false, DM3 -> People_SvodReport_SpecFDQueryFAM -> Value +
+                " " + DM3 -> People_SvodReport_SpecFDQueryNAME -> Value + " " +
+                DM3 -> People_SvodReport_SpecFDQueryOTCH -> Value);
+
+            AnsiString pr = ""; // номер предмета
+
+            for (int k = 0; k < j; k++) { // for цикл по записям в массиве
+                pr = mas_svod_nado[0][k];
+                // обрамляем пустую ячейку
+                if (mas_svod_nado[4][k] != "")
+                    Cell_2_Text_Ole2 (StrToInt (mas_svod_nado[4][k]),
+                    StrToInt (mas_svod_nado[4][k]), str_r, true, "Arial", 10,
+                    false, 3, 2, 0, false, false, "");
+
+                DM3 -> Detail_Svod_RealFDQuery -> First ();
+                for (int z = 0;
+                z < DM3 -> Detail_Svod_RealFDQuery -> RecordCount; z++)
+                { // for цикл по реальным оценкам
+
+                    if (pr == DM3 -> Detail_Svod_RealFDQueryN_OBJECT -> Value)
+                    { // if pr!
+                        AnsiString St = "";
+                        // --------новый кусок для определения системы оценок
+                        int ball_baza =
+                            ball_int (syst_ball,
+                            DM3 -> Detail_Svod_RealFDQueryRESULT -> Value);
+                        if (ball_baza > 10)
+                        { // if проверка на возвращение балла из десятибальной системы
+                            St = IntToStr (ball_baza - 10);
+
+                        } // end if проверка на возвращение балла из десятибальной системы
+                        else { // else на возвращение балла из пятибальной системы
+                            switch (ball_baza)
+                            { // switch баллы пятибальной системы
+                            case 0:
+                                St = "";
+                                // пустая ячейка в том случае когда не проставлена оценка
+                                break;
+                            case 1:
+                                St = "зач"; // зачет
+                                break;
+                            case 7:
+                                St = "осв"; // освобожден
+                                break;
+                            case 9:
+                                St = "+"; // прослушан
+                                break;
+                            default:
+                                St = IntToStr (ball_baza);
+                                // баллы 2,3,4,5 соответствуют
+                            } // end switch баллы пятибальной системы
+                        } // end else на возвращение балла из пятибальной системы
+                        // -------
+                        if (St == "зач" || St == "осв") {
+                            Cell_2_Text_Ole2 (StrToInt (mas_svod_nado[4][k]),
+                                StrToInt (mas_svod_nado[4][k]), str_r, true,
+                                "Arial", 10, false, 3, 2, 90, false, false, St);
+
+                        }
+                        else {
+                            Cell_2_Text_Ole2 (StrToInt (mas_svod_nado[4][k]),
+                                StrToInt (mas_svod_nado[4][k]), str_r, true,
+                                "Arial", 10, false, 3, 2, 0, false, false, St);
+
+                        }
+
+                        pr = "";
+                    } // end if pr
+                    DM3 -> Detail_Svod_RealFDQuery -> Next ();
+
+                } // for цикл по реальным оценкам
+
+            } // for цикл по записям в массиве
+
+            nnn++;
+            DM3 -> People_SvodReport_SpecFDQuery -> Next ();
+            DataModule1 -> ExAutoFit (1, 2);
+        } // end for
+        App_n.Clear ();
+        Sh.Clear ();
+        for (int i = 0; i < 5; i++)
+            delete[]mas_svod_nado[i];
+
+    } // if MyList1 -> Execute
+    for (int i = 0; i < 2; i++)
+        delete[]mas_spec[i];
+
+}
+
+void __fastcall TDiplomForm::BitBtn3Click (TObject *Sender)
+{ // Выдача списка на распределения
+    AnsiString inc_gr = DM3 -> Check_Return_Group (RadioGroup1 -> ItemIndex,
+        CheckListBox1);
+    if (inc_gr == "") { // проверка на вшивость
+        ShowMessage ("Вы не выбрали номер группы!");
+        return;
+    }
+    bool oplata = false; // бюджетники
+    int stb_max; // последний номер столбца
+    AnsiString text_found = "";
+    // !!!if (Application -> MessageBox ("Вы хотите список бюджетной формы обучения?", "", MB_YESNO) == mrYes)
+    if (MessageDlg ("Вы хотите список бюджетной формы обучения?", mtConfirmation,
+        TMsgDlgButtons () << mbYes << mbNo, 0) == mrYes) {
+        text_found = " and (PEOPLE.n_found<>2) ";
+        stb_max = 12;
+    }
+    else {
+        text_found = " and (PEOPLE.n_found=2) ";
+        oplata = true; // платники
+        stb_max = 11;
+    }
+
+    bool adress = false; // адресс в настоящее время
+
+    // !!!if (Application -> MessageBox ("Вы хотите использовать адрес до поступления - нажмите Yes\nили адрес в настоящее время - нажмите No?", "", MB_YESNO) == mrYes)
+    if (MessageDlg
+        ("Вы хотите использовать адрес до поступления - нажмите Yes\nили адрес в настоящее время - нажмите No?",
+        mtConfirmation, TMsgDlgButtons () << mbYes << mbNo, 0) == mrYes) {
+        adress = true; // адресс родителей (до поступления)
+    }
+
+    DM3 -> Name_SpecFDQuery -> Close ();
+    DM3 -> Name_SpecFDQuery -> SQL -> Clear ();
+    DM3 -> Name_SpecFDQuery -> SQL -> Add ("SELECT Distinct ( Specializ.N_SPECIALIZ), Specializ.SPECIAL \
+FROM PEOPLE People \
+   INNER JOIN INCREMENT_GROUP Increment_group \
+   ON  (People.INC_GROUP = Increment_group.INC_GROUP)  \
+   INNER JOIN FACULTY Faculty \
+   ON  (People.N_FAC = Faculty.N_FAC)  \
+   INNER JOIN SPECIALIZ Specializ  \
+   ON  (People.N_SPECIALIZ = Specializ.N_SPECIALIZ) \
+where (People.STATUS_PEOPLE=1) and (People.INC_GROUP in (" + inc_gr + ")) \
+and (People.N_FAC=" + nom_fac + ") \
+ORDER BY Specializ.N_SPECIALIZ");
+    DM3 -> Name_SpecFDQuery -> Open ();
+
+    // Формирование входного массива специализаций
+    AnsiString *mas_spec[2]; // массив номеров и названий специализаций
+    for (int i = 0; i < 2; i++)
+        mas_spec[i] = new AnsiString[DM3 -> Name_SpecFDQuery -> RecordCount];
+    //////////////////////////////////////////////////////////////////////////
+    DualListDlg = new TDualListDlg (this);
+    DualListDlg -> SrcList -> Items -> Clear ();
+    DualListDlg -> DstList -> Items -> Clear ();
+    // Мой компонент
+    for (int i = 0; i < DM3 -> Name_SpecFDQuery -> RecordCount; i++) {
+        mas_spec[0][i] = DM3 -> Name_SpecFDQuerySPECIAL -> Value;
+        DualListDlg -> SrcList -> Items -> AddObject (mas_spec[0][i],
+            (TObject *) (DM3 -> Name_SpecFDQueryN_SPECIALIZ -> Value));
+        mas_spec[1][i] = AnsiString (DM3 -> Name_SpecFDQueryN_SPECIALIZ -> Value);
+        DM3 -> Name_SpecFDQuery -> Next ();
+    } // for
+
+    DualListDlg -> ShowModal ();
+    if (DataModule2 -> printdlg == true) { // if MyList1 -> Execute
+        AnsiString Str_Nomer = "";
+        for (int i = 0; i <= DualListDlg -> DstList -> Items -> Count - 1; i++) {
+            Str_Nomer +=
+                String ( (int) (DualListDlg -> DstList -> Items -> Objects[i])) + ",";
+            // возвращаем номер специализации
+        } // 1-ый for
+        delete DualListDlg;
+        Str_Nomer.SetLength (Str_Nomer.Length () - 1);
+
+        DM3 -> Spisok_raspFDQuery -> Close ();
+        DM3 -> Spisok_raspFDQuery -> SQL -> Clear ();
+        DM3 -> Spisok_raspFDQuery -> SQL -> Add ("SELECT PEOPLE.NOMER, PEOPLE.FAM, PEOPLE.NAME, PEOPLE.OTCH, PEOPLE.POL, PEOPLE.MARIAGE, \
+    PEOPLE.N_CHILD, PEOPLE.N_VID_SPORT, PEOPLE.VID_EDU, PEOPLE.N_FAC, PEOPLE.KURS, \
+    PEOPLE.N_SPEC, PEOPLE.N_SPECIALIZ, specializ.special, specializ.SPECIAL_SKLON, Specializ.Special_Direction, PEOPLE.N_FOUND, PEOPLE.N_GROUP, \
+    PEOPLE.STATUS_PEOPLE, PEOPLE.INC_GROUP, \
+    PEOPLE.ADDRESS_BEFORE,  PEOPLE.ADDRESS, PEOPLE.DATA_R \
+    FROM PEOPLE \
+      INNER JOIN specializ ON (people.n_specializ = specializ.n_specializ)  \
+    where  (PEOPLE.n_fac=" + AnsiString (nom_fac) + ")  \
+      and (PEOPLE.vid_edu=" + RadioGroup1 -> ItemIndex + " )" + text_found + "  \
+      and (PEOPLE.inc_group in (" + inc_gr + "))  \
+      and (PEOPLE.n_specializ in (" + Str_Nomer +
+            ")) \
+      and (PEOPLE.status_people=1)  \
+      order by PEOPLE.n_spec, PEOPLE.n_specializ, PEOPLE.N_GROUP, PEOPLE.fam, PEOPLE.name, PEOPLE.otch");
+        DM3 -> Spisok_raspFDQuery -> Open ();
+        // text_found= and (PEOPLE.n_found <>2) или text_found= and (PEOPLE.n_found=2)
+
+        if (!DM3 -> Spisok_raspFDQuery -> RecordCount) {
+            ShowMessage ("Нет студентов по выбранным параметрам!");
+            for (int i = 0; i < 2; i++)
+                delete[]mas_spec[i];
+            return;
+        }
+
+        // Определение фамилии декана
+        AnsiString dekan = "";
+        switch (nom_fac) {
+        case 1:
+            dekan = "В.И.Новицкая";
+            break;
+        case 2:
+            dekan = "И.И.Гуслистова";
+            break;
+        case 3:
+            dekan = "Н.М.Машарская";
+            break;
+        case 4:
+            dekan = "О.Н.Михайлова";
+            break;
+        }
+
+        // запускаем  Exel
+        DataModule1 -> ExelInit ();
+        // делаем количество листов в книге
+
+        App_n.OlePropertySet ("SheetsInNewWorkbook", 1);
+
+        int n_specializ = 0; // специализация
+
+        int nnn = 1; // счетчик количества людей на специализации
+        AnsiString grup = ""; // группа
+
+        for (int i = 0; i < DM3 -> Spisok_raspFDQuery -> RecordCount;
+        i++) // формирование листов в зависимости от кол-ва народу!!
+        { // for
+            int stb = 1; // номер столбца
+            if (n_specializ != DM3 -> Spisok_raspFDQueryN_SPECIALIZ -> Value)
+            { // if n_specializ!=DM3 -> People_SvodReport_SpecN_SPECIALIZ -> Value
+
+                if (i) { // if не первый лист
+                    str_r++;
+                    str_r++;
+                    str_r++;
+                    Cell_2_Text_Ole2 (2, 2, str_r, false, "TimesNewRoman", 12,
+                        false, 2, 2, 0, false, false,
+                        "Декан " + DM2 -> FacultyFDTable -> Lookup ("N_FAC", nom_fac,
+                        "FAC1"));
+                    Cell_2_Text_Ole2 (8, 8, str_r, false, "TimesNewRoman", 12,
+                        false, 2, 2, 0, false, false, dekan);
+                }
+                n_specializ = DM3 -> Spisok_raspFDQueryN_SPECIALIZ -> Value;
+
+                App_n.OlePropertyGet ("WorkSheets").OleProcedure ("add");
+                Sh = App_n.OlePropertyGet ("WorkSheets").OlePropertyGet
+                    ("Item", 1);
+
+                // делаем горизонтальное выравнивание страницы
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Orientation", 2);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("CenterHorizontally", true);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet ("Zoom", false);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("FitToPagesWide", 1);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("FitToPagesTall", 2);
+
+                // поля
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet ("TopMargin", 58);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("BottomMargin", 14);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet ("LeftMargin", 58);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet
+                    ("RightMargin", 26);
+
+                //
+                nnn = 1; // счетчик количества людей на специализации
+                AnsiString name_spec = DM3 -> Spisok_raspFDQuerySPECIAL -> Value;
+                if (name_spec.Length () > 24)
+                { // if длина названия большая то урезаем ее до 30 символов
+                    name_spec = name_spec.SubString (1, 20);
+                } // end if длина названия большая то урезаем ее до 30 символов
+
+                try {
+                    Sh.OlePropertySet ("Name", WideString (name_spec));
+                }
+                catch (...) {
+                    name_spec = name_spec + AnsiString (i);
+                    Sh.OlePropertySet ("Name", WideString (name_spec));
+                }
+                Sh = App_n.OlePropertyGet ("ActiveSheet");
+
+                str_r = 1; // номер строки
+
+                AnsiString temp_text = "";
+
+                Cell_2_Text_Ole2 (stb, stb_max, str_r, false, "TimesNewRoman",
+                    18, true, 3, 2, 0, true, false, "СПИСОК");
+                str_r++;
+                Cell_2_Text_Ole2 (stb, stb_max, str_r, false, "TimesNewRoman",
+                    14, true, 3, 2, 0, true, false,
+                    "для персонального распределения выпускников");
+                str_r++;
+                Cell_2_Text_Ole2 (stb, stb_max, str_r, false, "TimesNewRoman",
+                    14, true, 3, 2, 0, true, false,
+                    "учреждения образования \"Белорусский государственный университет физической культуры\"");
+                str_r++;
+
+                // Определение названия факультета
+                switch (nom_fac) {
+                case 1:
+                    temp_text =
+                        "СПОРТИВНО-ПЕДАГОГИЧЕСКИЙ ФАКУЛЬТЕТ СПОРТИВНЫХ ИГР И ЕДИНОБОРСТВ";
+                    break;
+                case 2:
+                    temp_text =
+                        "СПОРТИВНО-ПЕДАГОГИЧЕСКИЙ ФАКУЛЬТЕТ МАССОВЫХ ВИДОВ СПОРТА";
+                    break;
+                case 3:
+                    temp_text =
+                        "ФАКУЛЬТЕТ ОЗДОРОВИТЕЛЬНОЙ ФИЗИЧЕСКОЙ КУЛЬТУРЫ И ТУРИЗМА";
+                    break;
+                case 4:
+                    temp_text = "ИНСТИТУТ МЕНЕДЖМЕНТА СПОРТА И ТУРИЗМА";
+                    break;
+                }
+                Cell_2_Text_Ole2 (stb, stb_max, str_r, false, "TimesNewRoman",
+                    14, true, 3, 2, 0, true, false, temp_text);
+                str_r++;
+
+                // Определение названия специализации
+                if ( (DM3 -> Spisok_raspFDQueryN_SPEC -> Value == 1) &&
+                    (n_specializ != 52 && n_specializ != 56 && n_specializ !=
+                    2 && n_specializ != 5 && n_specializ != 49 && n_specializ !=
+                    48 && n_specializ != 6 && n_specializ != 3 &&
+                    n_specializ != 4))
+                { // if надо писать тренерская работа    2,5,49,48,6 - ОФКиТ и 52,56 - МВС
+                    temp_text = "специализация: Тренерская работа по " +
+                        DM3 -> Spisok_raspFDQuerySPECIAL_SKLON -> Value;
+                } // end if надо писать тренерская работа
+                else { // else когда писать надо тольку специализацию
+                    if (DM3 -> Spisok_raspFDQueryN_SPEC -> Value == 1)
+                        temp_text =
+                            "специализация: " +
+                            DM3 -> Spisok_raspFDQuerySPECIAL_SKLON -> Value;
+                    else
+                        temp_text = "направление специальности: " +
+                            DM3 -> Spisok_raspFDQuerySPECIAL_DIRECTION -> Value;
+                } // end else когда писать надо тольку специализацию
+
+                // temp_text="специализация - \""+ DM3 -> Spisok_raspQuerySPECIAL_SKLON -> Value+"\"";
+                Cell_2_Text_Ole2 (stb, stb_max, str_r, false, "TimesNewRoman",
+                    14, true, 3, 2, 0, true, false, temp_text);
+                str_r++;
+
+                temp_text = "ВЫПУСК " + AnsiString (uch_god + 1) + " года";
+                Cell_2_Text_Ole2 (stb, stb_max, str_r, false, "TimesNewRoman",
+                    14, true, 3, 2, 0, true, false, temp_text);
+                str_r++;
+
+                if (oplata)
+                    Cell_2_Text_Ole2 (stb, stb_max, str_r, false,
+                    "TimesNewRoman", 14, true, 4, 2, 0, true, false,
+                    "обучающихся на условиях оплаты");
+                str_r++;
+
+                // Шапка
+                // ширина столбца
+                Variant d;
+
+                // № п/п
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true, "№№ п/п");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "1"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 4);
+                stb++;
+                // ФИО
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true, "Фамилия, имя, отчество");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "2"
+                stb++;
+                // Средний балл
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true, "Средний балл");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "3"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 8);
+                stb++;
+                // Пол
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, false, "Пол");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "4"
+                stb++;
+                // Год рождения
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true, "Год рождения");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "5"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 9);
+                stb++;
+                // Разряд
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, false, "Разряд");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "6"
+                stb++;
+                // Семейное положение
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true,
+                    "Семейное положение, место работы жены (мужа), кол-во детей");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "7"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 12);
+                stb++;
+
+                // Адрес
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true,
+                    "Адрес постоянного места жительства (адрес родителей)");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "8"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 21);
+                stb++;
+
+                if (!oplata) {
+                    // Организация
+                    Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false,
+                        3, 2, 0, false, true,
+                        "Организация, направившая на учёбу (для целевиков)");
+                    Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10,
+                        false, 3, 2, 0, false, false, stb); // "9"
+                    d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item",
+                        1, stb);
+                    d.OlePropertySet ("ColumnWidth", 21);
+                    stb++;
+                }
+                // Куда направляется на работу
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true, "Куда направляется на работу");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "10"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 30);
+                stb++;
+                // Подпись выпускника"
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true, "Подпись выпускника");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "11"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 12);
+                stb++;
+                // Примечание
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3,
+                    2, 0, false, true, "Примечание");
+                Cell_2_Text_Ole2 (stb, stb, str_r + 1, true, "Arial", 10, false,
+                    3, 2, 0, false, false, stb); // "12"
+                d = Sh.OlePropertyGet ("Cells").OlePropertyGet ("Item", 1, stb);
+                d.OlePropertySet ("ColumnWidth", 11);
+
+                // определяем сквозные строки
+                temp_text = "$" + AnsiString (str_r) + ":$" +
+                    AnsiString (str_r + 1);
+                Sh.OlePropertyGet ("PageSetup").OlePropertySet ("PrintTitleRows",
+                    WideString (temp_text));
+
+                str_r++;
+                grup = "";
+            } // end if n_specializ!=DM3 -> Spisok_raspQueryN_SPECIALIZ -> Value
+            str_r++;
+
+            if (grup != DM3 -> Spisok_raspFDQueryN_GROUP -> Value) {
+                grup = DM3 -> Spisok_raspFDQueryN_GROUP -> Value;
+                Cell_2_Text_Ole2 (1, 11, str_r, true, "Arial", 12, true, 3, 2, 0,
+                    true, false, grup + " группа");
+                str_r++;
+            }
+
+            AnsiString temp_text = "";
+            int nomer_s = DM3 -> Spisok_raspFDQueryNOMER -> Value;
+
+            stb = 1; // номер столбца опять первый
+            // № п/п
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false, nnn); // 1
+            stb++;
+            // ФИО
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 0, 2, 0,
+                false, false, DM3 -> Spisok_raspFDQueryFAM -> Value + " " +
+                DM3 -> Spisok_raspFDQueryNAME -> Value + " " +
+                DM3 -> Spisok_raspFDQueryOTCH -> Value); // 2
+            stb++;
+            // Средний балл
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false, ""); // 3
+            stb++;
+            // Пол
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false, DM3 -> Spisok_raspFDQueryPOL -> Value); // 4
+            stb++;
+            // Год рождения
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false,
+                SQLTimeStampToDateTime (DM3 -> Spisok_raspFDQueryDATA_R -> Value)
+                .DateString ().SubString (7, 4)); // 5
+            stb++;
+            // Разряд
+            DM3 -> Spisok_sportFDQuery -> Close ();
+            DM3 -> Spisok_sportFDQuery -> ParamByName ("NOMER") -> AsInteger = nomer_s;
+            DM3 -> Spisok_sportFDQuery -> Open ();
+            temp_text = "";
+            for (int i = 0; i < DM3 -> Spisok_sportFDQuery -> RecordCount; i++) {
+                temp_text += DM3 -> Spisok_sportFDQueryVID_SPORT -> Value + " " +
+                    DM3 -> Spisok_sportFDQueryTEXT_SPORT_CATEGORY -> Value + " ";
+                DM3 -> Spisok_sportFDQuery -> Next ();
+            }
+            // Разряд
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 0, 2, 0,
+                false, true, temp_text); // 6
+            stb++;
+            temp_text = "";
+            if (DM3 -> Spisok_raspFDQueryPOL -> Value == 'Ж') {
+                switch (DM3 -> Spisok_raspFDQueryMARIAGE -> Value) {
+                case 0:
+                    temp_text = "Не замужем";
+                    break;
+                case 1:
+                    temp_text = "Замужем";
+                    break;
+                case 2:
+                    temp_text = "Разведена";
+                    break;
+                case 3:
+                    temp_text = "Вдова";
+                    break;
+                }
+            }
+            else if (DM3 -> Spisok_raspFDQueryPOL -> Value == 'М') {
+                switch (DM3 -> Spisok_raspFDQueryMARIAGE -> Value) {
+                case 0:
+                    temp_text = "Холост";
+                    break;
+                case 1:
+                    temp_text = "Женат";
+                    break;
+                case 2:
+                    temp_text = "Разведен";
+                    break;
+                case 3:
+                    temp_text = "Вдовец";
+                    break;
+                }
+            }
+
+            if (DM3 -> Spisok_raspFDQueryN_CHILD -> Value)
+                temp_text +=
+                    " Дети: " + AnsiString
+                    (DM3 -> Spisok_raspFDQueryN_CHILD -> Value);
+
+            // Семейное положение
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, true, temp_text); // 7
+            stb++;
+            // Адрес
+            if (adress) // адресс родителей (до поступления)
+                    Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false,
+                0, 2, 0, false, true,
+                DM3 -> Spisok_raspFDQueryADDRESS_BEFORE -> Value); // 8
+            else // //адресс в настоящее время
+                    Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false,
+                0, 2, 0, false, true,
+                DM3 -> Spisok_raspFDQueryADDRESS -> Value); // 8
+            stb++;
+
+            if (!oplata) {
+                // CK
+                DM3 -> Spisok_CKFDQuery -> Close ();
+                DM3 -> Spisok_CKFDQuery -> ParamByName ("NOMER") -> AsInteger =
+                    nomer_s;
+                DM3 -> Spisok_CKFDQuery -> Open ();
+                temp_text = "";
+                for (int i = 0; i < DM3 -> Spisok_CKFDQuery -> RecordCount; i++) {
+                    if (DM3 -> Spisok_CKFDQueryN_SPECIALIZ -> Value == n_specializ)
+                    {
+                        temp_text += DM3 -> Spisok_CKFDQueryCENTRE -> Value + " ";
+                        temp_text += Grid_V (DM3 -> Spisok_CKFDQuery, "CUSTOMER");
+                    }
+                    DM3 -> Spisok_CKFDQuery -> Next ();
+                }
+
+                // Организация
+                Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 0,
+                    2, 0, false, true, temp_text); // 9
+                stb++;
+            }
+            // Куда направляется на работу
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, true, ""); // 10
+            stb++;
+            // Подпись выпускника"
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false, ""); // 11
+            stb++;
+            // Примечание
+            Cell_2_Text_Ole2 (stb, stb, str_r, true, "Arial", 10, false, 3, 2, 0,
+                false, false, ""); // 12
+
+            nnn++;
+            DM3 -> Spisok_raspFDQuery -> Next ();
+            DataModule1 -> ExAutoFit (2, 6);
+        } // end for
+
+        str_r++;
+        str_r++;
+        str_r++;
+        if (nom_fac == 4) {
+          Cell_2_Text_Ole2 (2, 2, str_r, false, "TimesNewRoman", 12, false, 2, 2,
+            0, false, false, "Декан факультета " + DM2 -> FacultyFDTable -> Lookup ("N_FAC",
+            nom_fac, "FAC1"));
+        }
+        else
+        Cell_2_Text_Ole2 (2, 2, str_r, false, "TimesNewRoman", 12, false, 2, 2,
+            0, false, false, "Декан " + DM2 -> FacultyFDTable -> Lookup ("N_FAC",
+            nom_fac, "FAC1"));
+
+        Cell_2_Text_Ole2 (8, 8, str_r, false, "TimesNewRoman", 12, false, 2, 2,
+            0, false, false, dekan);
+        App_n.Clear ();
+        Sh.Clear ();
+
+    } // if MyList1 -> Execute
+
+    for (int i = 0; i < 2; i++)
+        delete[]mas_spec[i];
+
+}
+
+void __fastcall TDiplomForm::CheckListBox1Click (TObject *Sender) {
+    Panel3 -> Visible = true;
+    RadioGroup3 -> Visible = true;
+    Label1 -> Visible = true;
+    DateTimePicker1 -> Visible = true;
+}
+
+void __fastcall TDiplomForm::DateTimePicker1Change (TObject *Sender) {
+    DateTimePicker1 -> Time = StrToTime ("00:00");
+}

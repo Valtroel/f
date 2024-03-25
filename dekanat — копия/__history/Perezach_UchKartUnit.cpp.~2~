@@ -1,0 +1,289 @@
+#include <vcl.h>
+#pragma hdrstop
+
+
+#include "Add_UchKartUnit.h"
+#include "CalendarUnit.h"
+#include "DataModule.h"
+#include "Perezach_UchKartUnit.h"
+
+
+#pragma package (smart_init)
+// #pragma link     "ToolEdit"
+#pragma resource "*.dfm"
+
+
+TPerezach_UchKartForm * Perezach_UchKartForm;
+
+
+int ball_do;                                                                    // оценка студента по предмету до перезачета
+
+
+
+
+// BitBtn1Click
+// BitBtn2Click
+// BitBtn3Click
+// DateTimePicker1Change
+// Edit1Click
+// Edit2Exit
+// Edit2KeyPress
+// FormActivate
+// FormClose
+// return_ball
+
+
+
+
+__fastcall TPerezach_UchKartForm::TPerezach_UchKartForm (TComponent* Owner)
+    : TForm (Owner) {
+}
+
+int TPerezach_UchKartForm::return_ball (int ball, int Index)
+{ // ПРОЦЕДУРА для перезачета в другую систему счисления
+    // int ball  - переданный балл
+    // int Index - значение RadioGroup2 -> ItemIndex (0 - десятибальная система, 1 - пятибальная система
+    int syst; // переменная для определения системы оценки
+
+    // ---определяем в какой системе ставить оценку
+    if (Index)
+        syst = 5;
+    else
+        syst = 10;
+    // ----
+    if ( (ball > 10 && Index == 1) || (ball < 10 && Index == 0))
+    { // if  ball>10 && Index==1 оценка в  десятибальной системе и выбрана пятибальная система
+        // ball<10 && Index==0 оценка в пятибальной  системе и выбрана десятибальная система
+
+        ball = ball_int (syst, ball);
+    } // end if
+    // -----
+    // if ( (ball<10 && Index==1) || (ball>10 && Index==0))
+    // if  ball<10 && Index==1 оценка в пятибальной системе и выбрана пятибальная система
+    // ball>10 && Index==0 оценка в десятибальной системе и выбрана десятибальная система
+    return ball;
+
+}
+
+void __fastcall TPerezach_UchKartForm::FormClose (TObject *Sender,
+    TCloseAction &Action) {
+    add_card = true;
+    Action = caFree;
+}
+
+void __fastcall TPerezach_UchKartForm::BitBtn2Click (TObject *Sender)
+{ // действие по кнопке СОХРАНИТЬ
+    if (DBLookupComboBox1 -> Text == "") { // if непустое значение ПРЕДМЕТ
+        ShowMessage ("Выберите название предмета для перезачета!");
+        return;
+    } // end if непустое значение ПРЕДМЕТ
+    // -----------
+   /*    if (ComboBox2 -> ItemIndex != 4 && ComboBox2 -> ItemIndex != 8)
+    { // if Выбрано основание получение оценки не перезачет
+        // ----4 или 8  для   ComboBox2 основания получения оценки
+        // 4- Перезачет с д/о на з/о или наоборот 8 - Перезачет с другого факультета
+        ShowMessage (
+            "Выберите основание получение оценки: Перезачет с д/о на з/о или наоборот или Перезачет с другого факультета");
+        return;
+    } // end if Выбрано основание получение оценки не перезачет   */
+    // ----------
+    if (DBLookupComboBox1 -> Text != DBText4 -> Field -> AsString)
+    { // if предупреждение в случае выбора другого предмета
+        // !!!if (Application -> MessageBox ("Внимание! Вы выбрали другое название предмета. Продолжить перезачет?", "Предупреждение", MB_YESNO) == mrNo)
+        if (MessageDlg
+            ("Внимание! Вы выбрали другое название предмета. Продолжить перезачет?",
+            mtConfirmation, TMsgDlgButtons () << mbYes << mbNo, 0) == mrNo)
+        { // if несовпадает значение предмета
+            return;
+        } // end if несовпадает значение предмета
+    } // end if предупреждение в случае выбора другого предмета
+
+    // ---------основная часть
+
+    // TLocateOptions Opts;
+    // Opts.Clear ();
+    // Variant lv[2];
+    // lv[0] = Variant (DataModule1 -> Spisoc_QueryNOMER -> Value);
+    // lv[1] = DBLookupComboBox1 -> KeyValue;       //  N_PLAN
+
+    // DataModule1 -> Result_BallQuery -> Close ();
+    // DataModule1 -> Result_BallQuery -> ParamByName ("NOM") -> AsInteger=DataModule1 -> Spisoc_QueryNOMER -> Value;
+    // DataModule1 -> Result_BallQuery -> Open ();
+
+    // поиск по номеру студента  и номеру учебного плана
+    DataModule1 -> Result_Ball_LocateFDQuery -> Close ();
+    DataModule1 -> Result_Ball_LocateFDQuery -> ParamByName ("NOM") -> AsInteger =
+        DataModule1 -> Spisoc_FDQueryNOMER -> Value;
+    DataModule1 -> Result_Ball_LocateFDQuery -> ParamByName ("PLAN") -> AsInteger =
+        DBLookupComboBox1 -> KeyValue; // N_PLAN
+    DataModule1 -> Result_Ball_LocateFDQuery -> Open ();
+
+    // if (DataModule1 -> Result_BallQuery -> Locate ("NOMER;N_PLAN", VarArrayOf (lv, 1), Opts))
+    if (DataModule1 -> Result_Ball_LocateFDQuery -> RecordCount)
+    { // если найдена запись для данного студента по этому учебному плану
+        ShowMessage ("У это студента уже есть оценка по выбранному предмету!");
+        return;
+
+    } // end if
+    else { // если такой записи не найдено, то нужно перейти в режим вставки и ее добавить
+        DataModule1 -> Result_Ball_LocateFDQuery -> Insert ();
+        DataModule1 -> Result_Ball_LocateFDQueryNOMER -> Value =
+            DataModule1 -> Spisoc_FDQueryNOMER -> Value;
+        DataModule1 -> Result_Ball_LocateFDQueryN_PLAN -> Value =
+            DBLookupComboBox1 -> KeyValue;
+
+        DataModule1 -> Result_Ball_LocateFDQueryRESULT -> Value =
+            return_ball (ball_do, RadioGroup2 -> ItemIndex);
+
+        DataModule1 -> Result_Ball_LocateFDQueryDATE_RESULT -> Value =
+            DateTimeToSQLTimeStamp (DateTimePicker1 -> Date);
+        DataModule1 -> Result_Ball_LocateFDQuerySTATUS_RESULT -> Value =
+            ComboBox2 -> ItemIndex + 1;
+
+        // ------ Проверка правильности занесенных данных по MessageBox
+        AnsiString box_res =
+            "Cтуденту: " + DataModule1 -> Spisoc_FDQueryFAM -> Value + " " +
+            DataModule1 -> Spisoc_FDQueryNAME -> Value + " " +
+            DataModule1 -> Spisoc_FDQueryOTCH -> Value + " по предмету " +
+            AnsiString (DBLookupComboBox1 -> Text) + " перезачли оценку";
+        // !!!if (Application -> MessageBox (box_res.c_str (),"Сохранить данные ?", MB_YESNO)== IDYES)
+        if (MessageDlg (box_res.c_str (), mtConfirmation,
+            TMsgDlgButtons () << mbYes << mbNo, 0) == mrYes) { // Сохранение выбранной записи
+
+            DataModule1 -> Result_Ball_LocateFDQuery -> ApplyUpdates ();
+            DataModule1 -> Result_Ball_LocateFDQuery -> CommitUpdates ();
+
+        }
+        else { // Удаление выбранной записи
+            DataModule1 -> Result_Ball_LocateFDQuery -> CancelUpdates ();
+
+        }
+
+    } // end else
+
+    Perezach_UchKartForm -> Close (); // закрываем форму
+
+}
+
+void __fastcall TPerezach_UchKartForm::Edit1Click (TObject *Sender) {
+    // -----открытие формы календаря для ускорения выбора учебного года
+    /* CalendarForm = new  TCalendarForm (this);
+     CalendarForm -> Label2 -> Visible=false;
+     CalendarForm -> ComboBox1 -> Visible=false;
+     CalendarForm -> CCalendar1 -> Visible=false;
+
+     CalendarForm -> Height=113;
+     CalendarForm -> BitBtn1 -> Top=8;
+     CalendarForm -> BitBtn1 -> Left=95;
+     CalendarForm -> BitBtn1 -> Width=82;
+     CalendarForm -> BitBtn2 -> Top=48;
+     CalendarForm -> BitBtn2 -> Left=95;
+
+     CalendarForm -> ShowModal ();
+     //-------
+     //Установка выбранного в календаре года в  Edit1  и автоматический пересчет
+     //второго значения учебного года в  Label2
+     if (calendar)
+     {
+     Edit1 -> Text=cal_year;
+     Label2 -> Caption="-- "+AnsiString (cal_year+1);
+     Perezach_UchKartForm -> Edit2 -> SetFocus ();
+     }
+     else ShowMessage ("Введите значение учебного года!"); */
+    // -------
+
+}
+
+void __fastcall TPerezach_UchKartForm::BitBtn3Click (TObject *Sender) {
+
+    // ----- проверка на допустимость значений семестра
+    try { // try
+        if (StrToInt (Edit2 -> Text) > 12 || StrToInt (Edit2 -> Text) <= 0)
+        { // if   вышли за пределы значения семестра
+            ShowMessage ("Вы ввели недопустимое значение семестра!");
+            Edit2 -> Text = "";
+            Edit2 -> SetFocus ();
+            return;
+        } // end if  вышли за пределы значения семестра
+        else { // else проверим на допустимость в зависимость от вида обучения
+            if (StrToInt (Edit2 -> Text) > 11 && ComboBox1 -> ItemIndex == 0)
+            { // if если вид обучения - дневное, то семестр не должен превышать 10
+                ShowMessage (
+                    "Вы ввели недопустимое значение семестра для дневного обучения!");
+                Edit2 -> Text = "";
+                Edit2 -> SetFocus ();
+                return;
+            } // end if если вид обучения - дневное, то семестр не должен превышать 10
+        } // end else проверим на допустимость в зависимость от вида обучения
+    } // end try
+    catch (EConvertError&) { // catch   ошибка конверсия типов
+        ShowMessage ("Вы ввели недопустимое значение семестра!");
+        Edit2 -> Text = "";
+        Edit2 -> SetFocus ();
+        return;
+    } // end catch ошибка конверсия типов
+    // -------
+    /* if (DBText7 -> Text==ComboBox1 -> Text)
+     { //if если учебный годи или вид обучения пустые
+     ShowMessage ("Введите значение учебного года или вида обучения!");
+     } */
+
+    if (Edit1 -> Text == "" || ComboBox1 -> ItemIndex == -1)
+    { // if если учебный годи или вид обучения пустые
+        ShowMessage ("Введите значение учебного года или вида обучения!");
+    } // end if  если учебный годи или вид обучения пустые
+    else { // else  основной алгоритм
+
+        DataModule1 -> Edu_PlanFDQuery -> Close ();
+        DataModule1 -> Edu_PlanFDQuery -> SQL -> Clear ();
+        DataModule1 -> Edu_PlanFDQuery -> SQL -> Add
+            ("SELECT Edu_plan.*, object_PLAN.name_object||' '||Edu_plan.clock_plan_all||'ч' as name_plan, object_PLAN.name_object FROM EDU_PLAN, OBJECT_PLAN WHERE (N_FAC=:N_FAC) and Edu_plan.n_object = object_plan.n_object AND (YEAR_PLAN=:PLAN) AND (SEMESTR=" +
+            Edit2 -> Text + ")" + " AND (VID_EDU_PLAN=" +
+            AnsiString (ComboBox1 -> ItemIndex) + ")");
+        DataModule1 -> Edu_PlanFDQuery -> Params -> Items[0] -> AsInteger = nom_fac;
+        DataModule1 -> Edu_PlanFDQuery -> ParamByName ("PLAN") -> AsInteger =
+            StrToInt (Edit1 -> Text);
+        DataModule1 -> Edu_PlanFDQuery -> Open ();
+        if (DataModule1 -> Edu_PlanFDQuery -> RecordCount) {
+            ball_do = DataModule1 -> Result_BallFDQueryRESULT -> Value;
+            // старая оценка студента
+            if (ball_do <= 10)
+                RadioGroup2 -> ItemIndex = 1; // для пятибальной системы
+            else
+                RadioGroup2 -> ItemIndex = 0; // для десятибальной системы
+
+            Panel4 -> Enabled = true;
+            ComboBox2 -> ItemIndex = 4;
+        }
+        else {
+            ShowMessage ("Нет предметов по данному учебному году и семестру");
+        }
+    } // end else основной алгоритм
+}
+
+void __fastcall TPerezach_UchKartForm::BitBtn1Click (TObject *Sender) {
+    Close ();
+}
+
+void __fastcall TPerezach_UchKartForm::Edit2Exit (TObject *Sender) {
+    Edit1 -> Text =
+        AnsiString (Mas_God_Semestr (DataModule1 -> Spisoc_FDQueryKURS -> Value,
+        StrToInt (Edit2 -> Text), uch_god));
+    Label2 -> Caption = "-- " + AnsiString (Edit1 -> Text.ToInt () + 1);
+}
+
+void __fastcall TPerezach_UchKartForm::FormActivate (TObject *Sender) {
+    ComboBox1 -> ItemIndex = DataModule1 -> Spisoc_FDQueryVID_EDU -> Value;
+    Edit2 -> SetFocus ();
+}
+
+void __fastcall TPerezach_UchKartForm::Edit2KeyPress (TObject *Sender, char &Key)
+{
+    DataModule1 -> Edit_Key (Key);
+    // Как сделать, чтобы в TEdit можно было вводить только числа?
+}
+void __fastcall TPerezach_UchKartForm::DateTimePicker1Change (TObject *Sender)
+{
+DateTimePicker1 -> Time = StrToTime ("00:00");
+}
+

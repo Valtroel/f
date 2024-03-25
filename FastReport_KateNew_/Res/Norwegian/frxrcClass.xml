@@ -1,0 +1,236 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<Resources CodePage="1252">
+  <StrRes Name="1" Text="OK"/>
+  <StrRes Name="2" Text="Avbryt"/>
+  <StrRes Name="3" Text="Alle"/>
+  <StrRes Name="4" Text="Aktuell side"/>
+  <StrRes Name="5" Text="Sider:"/>
+  <StrRes Name="6" Text="Sideskift"/>
+  <StrRes Name="7" Text="Sideområde"/>
+  <StrRes Name="8" Text="Eksport oppsetning"/>
+  <StrRes Name="9" Text="Angi sidetall og/eller sideområder avskilt av kommaer, f.eks. 1,3,5-12"/>
+  <StrRes Name="100" Text="Vis utskrift"/>
+  <StrRes Name="101" Text="Utskrift"/>
+  <StrRes Name="102" Text="Utskrift"/>
+  <StrRes Name="103" Text="Åpne"/>
+  <StrRes Name="104" Text="Åpne"/>
+  <StrRes Name="105" Text="Lagre"/>
+  <StrRes Name="106" Text="Lagre"/>
+  <StrRes Name="107" Text="Eksporter"/>
+  <StrRes Name="108" Text="Eksporter"/>
+  <StrRes Name="109" Text="Finn"/>
+  <StrRes Name="110" Text="Finn"/>
+  <StrRes Name="111" Text="Hele siden"/>
+  <StrRes Name="112" Text="Hele siden"/>
+  <StrRes Name="113" Text="Sidebredde"/>
+  <StrRes Name="114" Text="Sidebredde"/>
+  <StrRes Name="115" Text="100%"/>
+  <StrRes Name="116" Text="100%"/>
+  <StrRes Name="117" Text="To sider"/>
+  <StrRes Name="118" Text="To sider"/>
+  <StrRes Name="119" Text="Zoom"/>
+  <StrRes Name="120" Text="Sideoppsett"/>
+  <StrRes Name="121" Text="Sideoppsett"/>
+  <StrRes Name="122" Text="Omriss"/>
+  <StrRes Name="123" Text="Omriss"/>
+  <StrRes Name="124" Text="Zoom Inn"/>
+  <StrRes Name="125" Text="Zoom Inn"/>
+  <StrRes Name="126" Text="Zoom Ut"/>
+  <StrRes Name="127" Text="Zoom Ut"/>
+  <StrRes Name="128" Text="Oversikt"/>
+  <StrRes Name="129" Text="Rapportoversikt"/>
+  <StrRes Name="130" Text="Miniatyr"/>
+  <StrRes Name="131" Text="Miniatyr"/>
+  <StrRes Name="132" Text="Editer"/>
+  <StrRes Name="133" Text="Editer side"/>
+  <StrRes Name="134" Text="Første"/>
+  <StrRes Name="135" Text="Første side"/>
+  <StrRes Name="136" Text="Forrige"/>
+  <StrRes Name="137" Text="Forrige side"/>
+  <StrRes Name="138" Text="Neste"/>
+  <StrRes Name="139" Text="Neste side"/>
+  <StrRes Name="140" Text="Siste"/>
+  <StrRes Name="141" Text="Siste side"/>
+  <StrRes Name="142" Text="Sidenummer"/>
+  <StrRes Name="150" Text="Full Skjerm"/>
+  <StrRes Name="151" Text="Eksporter til PDF"/>
+  <StrRes Name="152" Text="Send som E-mail"/>
+  <StrRes Name="zmPageWidth" Text="Sidebredde"/>
+  <StrRes Name="zmWholePage" Text="Hele sider"/>
+  <StrRes Name="200" Text="Utskrift"/>
+  <StrRes Name="201" Text="Printer"/>
+  <StrRes Name="202" Text="Sider"/>
+  <StrRes Name="203" Text="Antal kopier"/>
+  <StrRes Name="204" Text="Settvis"/>
+  <StrRes Name="205" Text="Kopier"/>
+  <StrRes Name="206" Text="Utskrift"/>
+  <StrRes Name="207" Text="Annet"/>
+  <StrRes Name="208" Text="Hvor:"/>
+  <StrRes Name="209" Text="Egenskaper..."/>
+  <StrRes Name="210" Text="Utskrift til fil"/>
+  <StrRes Name="211" Text="Orden"/>
+  <StrRes Name="212" Text="Navn:"/>
+  <StrRes Name="213" Text="Print mode"/>
+  <StrRes Name="214" Text="Utskrift på ark"/>
+  <StrRes Name="216" Text="Duplex"/>
+  <StrRes Name="ppAll" Text="Alle sider"/>
+  <StrRes Name="ppOdd" Text="Ulike sider"/>
+  <StrRes Name="ppEven" Text="Like sider"/>
+  <StrRes Name="pgDefault" Text="Standard"/>
+  <StrRes Name="pmDefault" Text="Standard"/>
+  <StrRes Name="pmSplit" Text="Oppdel store sider"/>
+  <StrRes Name="pmJoin" Text="Sammensett små sider"/>
+  <StrRes Name="pmScale" Text="Skaler"/>
+  <StrRes Name="poDirect" Text="Direkte (1-9)"/>
+  <StrRes Name="poReverse" Text="Omvendt (9-1)"/>
+  <StrRes Name="300" Text="Finn Tekst"/>
+  <StrRes Name="301" Text="Søk Tekst:"/>
+  <StrRes Name="302" Text="Søkevalg"/>
+  <StrRes Name="303" Text="Erstatt med"/>
+  <StrRes Name="304" Text="Søk fra begynnelse"/>
+  <StrRes Name="305" Text="Forskell på store og små bokstaver"/>
+  <StrRes Name="400" Text="Sideoppsett"/>
+  <StrRes Name="401" Text="Bredde"/>
+  <StrRes Name="402" Text="Høyde"/>
+  <StrRes Name="403" Text="Størrelse"/>
+  <StrRes Name="404" Text="Orientering"/>
+  <StrRes Name="405" Text="Venstre"/>
+  <StrRes Name="406" Text="Topp"/>
+  <StrRes Name="407" Text="Høyre"/>
+  <StrRes Name="408" Text="Bunn"/>
+  <StrRes Name="409" Text="Marger"/>
+  <StrRes Name="410" Text="Stående"/>
+  <StrRes Name="411" Text="Liggende"/>
+  <StrRes Name="412" Text="Annet"/>
+  <StrRes Name="413" Text="Legg til den aktuelle side"/>
+  <StrRes Name="414" Text="Legg til alle sider"/>
+  <StrRes Name="500" Text="Utskrift"/>
+  <StrRes Name="501" Text="Printer"/>
+  <StrRes Name="502" Text="Sider"/>
+  <StrRes Name="503" Text="Kopier"/>
+  <StrRes Name="504" Text="Antall kopier"/>
+  <StrRes Name="505" Text="Valgmuligheter"/>
+  <StrRes Name="506" Text="Escape kommandoer"/>
+  <StrRes Name="507" Text="Utskriv til fil"/>
+  <StrRes Name="508" Text="OEM codepage"/>
+  <StrRes Name="509" Text="Pseudografikk"/>
+  <StrRes Name="510" Text="Printerfil (*.prn)|*.prn"/>
+  <StrRes Name="mbConfirm" Text="Bekreft"/>
+  <StrRes Name="mbError" Text="Feil"/>
+  <StrRes Name="mbInfo" Text="Informasjon"/>
+  <StrRes Name="xrCantFindClass" Text="Kunne ikke finne klasse"/>
+  <StrRes Name="prVirtual" Text="Virtuell"/>
+  <StrRes Name="prDefault" Text="Standard"/>
+  <StrRes Name="prCustom" Text="Brukervalgt"/>
+  <StrRes Name="enUnconnHeader" Text="Ikke forbundet hode/fot"/>
+  <StrRes Name="enUnconnGroup" Text="Intet databånd for gruppen"/>
+  <StrRes Name="enUnconnGFooter" Text="Ingen gruppehode for"/>
+  <StrRes Name="enBandPos" Text="Ukorrekt båndposition:"/>
+  <StrRes Name="dbNotConn" Text="DataSet %s er ikke forbundet til data"/>
+  <StrRes Name="dbFldNotFound" Text="Feltet ble ikke funnet:"/>
+  <StrRes Name="clDSNotIncl" Text="(datasett er ikke innkluderet i Report.DataSets)"/>
+  <StrRes Name="clUnknownVar" Text="Ukjendt variabel eller datafelt:"/>
+  <StrRes Name="clScrError" Text="Skriptfeil i %s: %s"/>
+  <StrRes Name="clDSNotExist" Text="Datasettet &#38;#34;%s&#38;#34; finnes ikke"/>
+  <StrRes Name="clErrors" Text="Følgende feil oppstod:"/>
+  <StrRes Name="clExprError" Text="Feil i uttrykk"/>
+  <StrRes Name="clFP3files" Text="Forbereder Rapport"/>
+  <StrRes Name="clSaving" Text="Lagrer fil..."/>
+  <StrRes Name="clCancel" Text="Avbryt"/>
+  <StrRes Name="clClose" Text="Lukk"/>
+  <StrRes Name="clPrinting" Text="Printer side"/>
+  <StrRes Name="clLoading" Text="Henter fil..."/>
+  <StrRes Name="clPageOf" Text="Side %d av %d"/>
+  <StrRes Name="clOf" Text="av %d"/>
+  <StrRes Name="clFirstPass" Text="Første gennomløp: side "/>
+  <StrRes Name="clNoPrinters" Text="Ingen printer er installert på systemet"/>
+  <StrRes Name="clDecompressError" Text="Stream dekomprimeringsfeil"/>
+  <StrRes Name="crFillMx" Text="Fyller kryss-tab..."/>
+  <StrRes Name="crBuildMx" Text="Bygger kryss-tab..."/>
+  <StrRes Name="prRunningFirst" Text="Første gennomløp: side %d"/>
+  <StrRes Name="prRunning" Text="Forbereder side %d"/>
+  <StrRes Name="prPrinting" Text="Printer side %d"/>
+  <StrRes Name="prExporting" Text="Eksporterer side %d"/>
+  <StrRes Name="uCm" Text="cm"/>
+  <StrRes Name="uInch" Text="in"/>
+  <StrRes Name="uPix" Text="px"/>
+  <StrRes Name="uChar" Text="chr"/>
+  <StrRes Name="dupDefault" Text="Standard"/>
+  <StrRes Name="dupVert" Text="Vertikal"/>
+  <StrRes Name="dupHorz" Text="Horisontal"/>
+  <StrRes Name="dupSimpl" Text="Simplex"/>
+  <StrRes Name="SLangNotFound" Text="Språket '%s' ble ikke funnet"/>
+  <StrRes Name="SInvalidLanguage" Text="Ugyldig språk definition"/>
+  <StrRes Name="SIdRedeclared" Text="Identifier generklært: "/>
+  <StrRes Name="SUnknownType" Text="Ukjent type: "/>
+  <StrRes Name="SIncompatibleTypes" Text="Ikke kompatible typer"/>
+  <StrRes Name="SIdUndeclared" Text="Ikke erklært identifier: "/>
+  <StrRes Name="SClassRequired" Text="Klasse-type påkrevet"/>
+  <StrRes Name="SIndexRequired" Text="Indeks påkrevet"/>
+  <StrRes Name="SStringError" Text="String har ikke egenskaper eller metoder"/>
+  <StrRes Name="SClassError" Text="Klassen %s har ikke noen standard egenskap"/>
+  <StrRes Name="SArrayRequired" Text="Array-type påkrevet"/>
+  <StrRes Name="SVarRequired" Text="Variabel påkrevet"/>
+  <StrRes Name="SNotEnoughParams" Text="Ikke tilstrekkelige faktiske parameterer"/>
+  <StrRes Name="STooManyParams" Text="For mange faktiske parameterer"/>
+  <StrRes Name="SLeftCantAssigned" Text="Venstre side kan ikke bli knyttet til"/>
+  <StrRes Name="SForError" Text="For loop variabel skal være numerisk variabel"/>
+  <StrRes Name="SEventError" Text="Event handler skal være en procedure"/>
+  <StrRes Name="600" Text="Utfold alle"/>
+  <StrRes Name="601" Text="Slå alt sammen"/>
+  <StrRes Name="clStrNotFound" Text="Tekst ble ikke fundet"/>
+  <StrRes Name="clCantRen" Text="Kunne ikke omdøpe %s, der ble introdusert i den opprinnelige rapport"/>
+  <StrRes Name="clCirRefNotAllow" Text="Cirkular reference til barn ikke tillatt"/>
+  <StrRes Name="clDupName" Text="Identisk navn"/>
+  <StrRes Name="clErrorInExp" Text="Feil ved beregning af uttrykk:"/>
+  <StrRes Name="expMtm" Text="Timeout udløpt"/>
+  <StrRes Name="erInvalidImg" Text="Ugyldig bilde format"/>
+  <StrRes Name="ReportTitle" Text="ReportTitle"/>
+  <StrRes Name="ReportSummary" Text="ReportSummary"/>
+  <StrRes Name="PageHeader" Text="PageHeader"/>
+  <StrRes Name="PageFooter" Text="PageFooter"/>
+  <StrRes Name="Header" Text="Header"/>
+  <StrRes Name="Footer" Text="Footer"/>
+  <StrRes Name="MasterData" Text="MasterData"/>
+  <StrRes Name="DetailData" Text="DetailData"/>
+  <StrRes Name="SubdetailData" Text="SubdetailData"/>
+  <StrRes Name="Data4" Text="Data4"/>
+  <StrRes Name="Data5" Text="Data5"/>
+  <StrRes Name="Data6" Text="Data6"/>
+  <StrRes Name="GroupHeader" Text="GroupHeader"/>
+  <StrRes Name="GroupFooter" Text="GroupFooter"/>
+  <StrRes Name="Child" Text="Child"/>
+  <StrRes Name="ColumnHeader" Text="ColumnHeader"/>
+  <StrRes Name="ColumnFooter" Text="ColumnFooter"/>
+  <StrRes Name="Overlay" Text="Overlay"/>
+  <StrRes Name="2_5_interleaved" Text="2_5_interleaved"/>
+  <StrRes Name="2_5_industrial" Text="2_5_industrial"/>
+  <StrRes Name="2_5_matrix" Text="2_5_matrix"/>
+  <StrRes Name="Code39" Text="Code39"/>
+  <StrRes Name="Code39 Extended" Text="Code39 udvidet"/>
+  <StrRes Name="Code128A" Text="Code128A"/>
+  <StrRes Name="Code128B" Text="Code128B"/>
+  <StrRes Name="Code128C" Text="Code128C"/>
+  <StrRes Name="Code93" Text="Code93"/>
+  <StrRes Name="Code93 Extended" Text="Code93 udvidet"/>
+  <StrRes Name="MSI" Text="MSI"/>
+  <StrRes Name="PostNet" Text="PostNet"/>
+  <StrRes Name="Codebar" Text="Codebar"/>
+  <StrRes Name="EAN8" Text="EAN8"/>
+  <StrRes Name="EAN13" Text="EAN13"/>
+  <StrRes Name="UPC_A" Text="UPC_A"/>
+  <StrRes Name="UPC_E0" Text="UPC_E0"/>
+  <StrRes Name="UPC_E1" Text="UPC_E1"/>
+  <StrRes Name="UPC Supp2" Text="UPC Supp2"/>
+  <StrRes Name="UPC Supp5" Text="UPC Supp5"/>
+  <StrRes Name="EAN128A" Text="EAN128A"/>
+  <StrRes Name="EAN128B" Text="EAN128B"/>
+  <StrRes Name="EAN128C" Text="EAN128C"/>
+  <StrRes Name="rpEditRep" Text="Rediger Rapport..."/>
+  <StrRes Name="rpEditAlias" Text="Rediger feltaliaser..."/>
+  <StrRes Name="rave0" Text="Rave Import"/>
+  <StrRes Name="rave1" Text="Rave filen inneholder ikke TRaveReport elementer."/>
+  <StrRes Name="rave2" Text="Rave filen inneholder %d rapporter. Hver rapport vil bli konverteret til en fr3 fil. Velg en mappe hvor fr3 filerne skal lagres. Merk at kun den siste rapport blir åpnet i designeren."/>
+  <StrRes Name="rave3" Text="Kan ikke lage %s."/>
+  <StrRes Name="rave4" Text="Rapport %s, side %s."/>
+</Resources>

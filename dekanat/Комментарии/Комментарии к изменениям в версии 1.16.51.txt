@@ -1,0 +1,38 @@
+Добавлена зачётная единица к ведомостям
+
+Unit:VedUnit: 
+
+стр.1142 Добавлен код:
+
+float zach_ed = DataModule1->Vedomost_ReportQueryCLOCK_PLAN->Value;
+Ved_ReportForm->QRLabel56->Caption="("+AnsiString(zach_ed)+" з.е.)";
+
+if ((DataModule1->VedomostQueryYEAR_PLAN->Value - ((float)DataModule1->Vedomost_ReportQuerySEMESTR_VED->Value)/2) >= 2012)
+{
+Ved_ReportForm->QRDBText6->Enabled=False;
+Ved_ReportForm->QRLabel52->Enabled=False;
+Ved_ReportForm->QRLabel56->Enabled=True;
+}
+
+стр.1674 Добавлен код:
+
+float zach_ed = DataModule1->Vedomost_ReportQueryCLOCK_PLAN->Value;
+Dop_Ved_ReportForm->QRLabel67->Caption="("+AnsiString(zach_ed)+" з.е.)";
+
+if ((DataModule1->VedomostQueryYEAR_PLAN->Value - ((float) DataModule1->Vedomost_ReportQuerySEMESTR_VED->Value)/2) >= 2012)
+{
+  Dop_Ved_ReportForm->QRDBText7->Enabled=False;
+  Dop_Ved_ReportForm->QRLabel51->Enabled=False;
+  Dop_Ved_ReportForm->QRLabel67->Enabled=True;
+}
+
+Изменены шаблоны:
+
+Dop_Ved_ReportUnit:
+
+добавлен QRLabel67
+
+Ved_ReportUnit:
+
+добавлен QRLabel56
+

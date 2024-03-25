@@ -1,0 +1,1090 @@
+#include <vcl.h>
+#pragma hdrstop
+
+
+#include "DataModule_Card.h"
+#include "DataModule.h"
+#include "DM2Unit.h"
+#include "DM4Unit.h"
+#include "DualList.h"
+#include "Func.h"
+#include "InfoUnit.h"
+
+
+#pragma package (smart_init)
+// #pragma link     "MyList"
+#pragma resource "*.dfm"
+
+
+TInfoForm * InfoForm;
+
+
+AnsiString     * mas_nomer_zach[2];                                             // массив номеров студентов с ФИО, № гр, и NOMER для зачеток
+
+AnsiString       god_two;                                                       // переменная двух последних цифр года
+
+bool             mas_ch      = false,                                           // переменная для определения удален массив или нет// false - массива нет// true - массив надо удалять
+                 mas_none    = false,                                           // переменная если нет пронумерованных зачеток, но нужно выдать список в Excel// false - нумеровали зачетки// true - зачетки не нумеровали
+                 n_r,                                                           // добавляем или редактируем запись
+                 up_stud     = false,
+                 well        = false;
+
+int              incr_gr,                                                       // инкремент группы
+                 nomer_st,
+                 record_zach,                                                   // количество человек, не имеющих номера зачетки
+                 year_add    = 0,
+                 zach        = 0;                                               // 0 - 01.09+год поступления; 1 - вводим дату
+
+String           year_uch;
+
+TDateTime        ggg,
+                 yyy;
+
+TLocateOptions   Flags;
+
+Variant          ExPril,
+                 PrilBook,                                                      // переменная для Excel WBook и WSheet
+                 PrilSheet;                                                     // переменная для Excel WBook и WSheet
+
+
+
+
+
+// BitBtn1Click
+// BitBtn2Click
+// BitBtn3Click
+// Create_Shapka
+// Create_Spisok_Zachetka
+// del_mas
+// FormClose
+// FormCreate
+// MaskEdit1Exit
+// MaskEdit2Change
+// RadioGroup1Click
+// RadioGroup2Click
+// RadioGroup3Click
+// RadioGroup4Click
+// SaveTrStud
+// SpeedButton1Click
+// StateQ
+// UpStud
+
+
+
+
+__fastcall TInfoForm::TInfoForm (TComponent* Owner) : TForm (Owner) {
+}
+
+
+void __fastcall TInfoForm::del_mas (bool mas_chek)
+{ // удаление массива студентов
+    // mas_chek = true удалять массив
+    // mas_chek = false массив уже удален
+
+    /* if (mas_chek) { // if
+     for (int i = 0; i < 2; i++)
+     delete[]mas_nomer_zach[i];
+     //delete[]mas_nomer_zach;
+     } // end if */
+}
+
+----
+void __fastcall TInfoForm::Create_Spisok_Zachetka ()
+{ // создание списка студентов с номерами зачетных книжек
+    // для одного листа
+    PrilSheet = NewSheet1 (ExPril);
+    incr_gr = DataModule1 -> Zachetka_All_KursFDQueryINC_GROUP -> Value;
+    Variant cell;
+    NameSheet1 (PrilSheet, DataModule1 -> Zachetka_All_KursFDQueryN_GROUP -> Value);
+    SelectSheet (PrilBook, DataModule1 -> Zachetka_All_KursFDQueryN_GROUP -> Value);
+    Variant Rang2;
+    // -- номер группы
+    Rang2 = Range2 (PrilSheet, "B2:D2");
+    CellFont ("Arial", 12, true, false, 1, 0, Rang2);
+    // установливаем шрифт Arial 10 п/ж
+    SheetFormat (Rang2, "@"); // текстовый формат
+
+    CellValue (DataModule1 -> Zachetka_All_KursFDQueryN_GROUP -> Value, 2, 2);
+    CellValue (RadioGroup1 -> Items -> Strings[RadioGroup1 -> ItemIndex], 3, 2);
+    // --
+    // Занесение номера группы на лист
+    // CellValue ("Группа "+n_gr+v_e,1,1);
+    Create_Shapka ();
+    int str = 3; // переменная для номера строки
+    while (incr_gr == DataModule1 -> Zachetka_All_KursFDQueryINC_GROUP -> Value &&
+        !DataModule1 -> Zachetka_All_KursFDQuery -> Eof)
+    { // пока одинаковый номер группы
+        CellValue (str - 2, 1, str + 1);
+        BorderCell (1, str + 1, 1, 2);
+        CellValue (DataModule1 -> Zachetka_All_KursFDQueryFAM -> Value + " " +
+            DataModule1 -> Zachetka_All_KursFDQueryNAME -> Value + " " +
+            DataModule1 -> Zachetka_All_KursFDQueryOTCH -> Value, 2, str + 1);
+        BorderCell (2, str + 1, 1, 2);
+        cell = SelectCell (3, str + 1);
+        SheetFormat (cell, "@"); // текстовый формат
+        CellValue (DataModule1 -> Zachetka_All_KursFDQueryN_ZACHET -> Value, 3,
+            str + 1);
+        BorderCell (3, str + 1, 1, 2);
+        // обрамление оставшихся столбцов
+        BorderCell (4, str + 1, 1, 2); // дата
+        BorderCell (5, str + 1, 1, 2); // подпись
+
+        if (!DataModule1 -> Zachetka_All_KursFDQuery -> Eof)
+            DataModule1 -> Zachetka_All_KursFDQuery -> Next ();
+        else {
+            AutoFitColumn (PrilSheet, 2); // автоподбор ширины столбца ФИО
+            // выделение диапазона столбца с номером зачетки для помещения по ценру
+            Variant Cell1 = "C3";
+            Variant Cell2 = "C" + IntToStr (str);
+            Rang2 = Range_Range (PrilSheet, Cell1, Cell2);
+            HorizontalAlign (Rang2, 3); // выравнивание по центру */
+            return;
+        }
+        str++;
+    } // пока одинаковый номер группы
+    AutoFitColumn (PrilSheet, 2); // автоподбор ширины столбца ФИО
+    // выделение диапазона столбца с номером зачетки для помещения по ценру
+    Variant Cell1 = "C3";
+    Variant Cell2 = "C" + IntToStr (str);
+    Rang2 = Range_Range (PrilSheet, Cell1, Cell2);
+    HorizontalAlign (Rang2, 3); // выравнивание по центру */
+}
+
+------
+void __fastcall TInfoForm::Create_Shapka () { // -----Шапка таблицы
+    Variant Rang3;
+    int col = 1; // номер столбца
+    // -- факультет
+    Rang3 = Range2 (PrilSheet, "B1");
+    CellFont ("Arial", 14, true, false, 1, 0, Rang3);
+    // установливаем шрифт Arial 10 п/ж
+    CellValue (DM2 -> FacultyFDTable -> Lookup ("N_FAC", nom_fac, "FAC1"), 2, 1);
+    // --
+    Rang3 = Range2 (PrilSheet, "A3:F3");
+    CellFont ("Arial", 12, true, false, 1, 0, Rang3);
+    // установливаем шрифт Arial 10 п/ж
+    HorizontalAlign (Rang3, 3); // по центру по горизонтали
+    VerticalAlign (Rang3, 2); // по центру по вертикали
+    CellValue ("№ п/п", col, 3);
+    col++;
+    CellValue ("ФИО", col, 3);
+    col++;
+    CellValue ("№ студенческого билета, зачетки", col, 3);
+    col++;
+    if (RadioGroup4 -> ItemIndex && !mas_none)
+    { // if использовать данные из массива
+        CellValue ("Группа", col, 3);
+        col++;
+        CellValue ("Дата", col, 3);
+        col++;
+        CellValue ("Подпись", col, 3);
+    } // end if
+    else { // else всех студентов выбранного курса
+        CellValue ("Дата", col, 3);
+        col++;
+        CellValue ("Подпись", col, 3);
+    } // end else
+
+    Rang3 = Range2 (PrilSheet, "C3");
+    W1 (Rang3); // перенос по словам
+    for (int i = 1; i <= col; i++) {
+        BorderCell (i, 3, 1, 2);
+        AutoFitColumn (PrilSheet, i);
+    }
+    ColumnWidth (Rang3, 22);
+    HeightRow (Rang3, 32);
+
+}
+
+
+void __fastcall TInfoForm::FormClose (TObject *Sender, TCloseAction &Action) {
+    // ------
+    // del_mas (mas_ch); // удаление массива
+    // mas_ch = false; // установка переменной в состояние удаленного массива
+    // ------
+    Action = caFree;
+}
+
+
+void __fastcall TInfoForm::FormCreate (TObject *Sender) {
+    /* MaskEdit1 -> EditMask = "!\ (999\)000-0000;1";   образец
+     MaskEdit1 -> Text = ""; */
+    AnsiString mask_god = IntToStr (uch_god); // переводим учебный год в Int
+    if (nom_fac != 3) { // if  СИиЕ и МВС, то создаем стандарт для   MaskEdit
+        // MaskEdit1 -> EditMask = "\"+mask_god.SubString (3,1)+"\"+mask_god.SubString (4,1)+"\"+nom_fac+"000;_";
+    } // end if
+    else { // else ОФКиТ, то создаем стандарт для   MaskEdit
+        // MaskEdit1 -> EditMask = "\"+mask_god.SubString (3,1)+"\"+mask_god.SubString (4,1)+"\0000;_";
+    } // end else
+    MaskEdit1 -> Text = "";
+}
+
+
+void __fastcall TInfoForm::RadioGroup2Click (TObject *Sender) {
+    MaskEdit1 -> Text = "";
+    MaskEdit2 -> Text = "";
+
+    // ------
+    // del_mas (mas_ch); // удаление массива
+    // mas_ch = false; // установка переменной в состояние удаленного массива
+    // ------
+    Label6 -> Visible = false; // Label  годa поступления
+    MaskEdit2 -> Visible = false; // год поступления
+
+    Label1 -> Visible = false;
+    Label2 -> Visible = false;
+    Label3 -> Visible = false;
+    Label4 -> Visible = false; // последний номер зачетной книжки для этого года
+    Label5 -> Visible = false;
+    // количество выбранных студентов у которых нет номера зачетной книжки
+    MaskEdit1 -> Visible = false; // предположительный номер зачетной книжки
+
+    Label6 -> Visible = false; // Label    года
+    MaskEdit2 -> Visible = false; // предположительный год
+    SpeedButton1 -> Visible = false;
+    // кнопка выбора максимального значения зачетки за выбранный год
+    RadioGroup3 -> Visible = false; // выбор всех или по студентам
+    RadioGroup3 -> ItemIndex = -1;
+
+    BitBtn1 -> Visible = false;
+    BitBtn2 -> Visible = false;
+    RadioGroup4 -> Visible = false;
+    // ------
+
+    // заносим предположительный год поступления студентов
+    MaskEdit2 -> Text = IntToStr (uch_god - RadioGroup2 -> ItemIndex);
+
+    Label6 -> Visible = true; // Label  годa поступления
+    MaskEdit2 -> Visible = true; // год поступления
+    SpeedButton1 -> Visible = true;
+    // ------
+
+    // ------
+}
+
+
+void __fastcall TInfoForm::RadioGroup1Click (TObject *Sender) {
+    // ------
+    // del_mas (mas_ch); // удаление массива
+    // mas_ch = false; // установка переменной в состояние удаленного массива
+
+    // -----
+    Label6 -> Visible = false; // Label  годa поступления
+    MaskEdit2 -> Visible = false; // год поступления
+
+    Label1 -> Visible = false;
+    Label2 -> Visible = false;
+    Label3 -> Visible = false;
+    Label4 -> Visible = false; // последний номер зачетной книжки для этого года
+    Label5 -> Visible = false;
+    // количество выбранных студентов у которых нет номера зачетной книжки
+    MaskEdit1 -> Visible = false; // предположительный номер зачетной книжки
+
+    Label6 -> Visible = false; // Label    года
+    MaskEdit2 -> Visible = false; // предположительный год
+    SpeedButton1 -> Visible = false;
+    // кнопка выбора максимального значения зачетки за выбранный год
+    RadioGroup3 -> Visible = false; // выбор всех или по студентам
+    RadioGroup3 -> ItemIndex = -1;
+
+    BitBtn1 -> Visible = false;
+    BitBtn2 -> Visible = false;
+    RadioGroup4 -> Visible = false;
+    // ------
+    RadioGroup2 -> Items -> Clear (); // oчищение курсов
+    // ---
+    if (RadioGroup1 -> ItemIndex) { // if    выбрана заочная форма
+        RadioGroup2 -> Items -> Add ("1 курс");
+        RadioGroup2 -> Items -> Add ("2 курс");
+        RadioGroup2 -> Items -> Add ("3 курс");
+        RadioGroup2 -> Items -> Add ("4 курс");
+        RadioGroup2 -> Items -> Add ("5 курс");
+        RadioGroup2 -> Items -> Add ("6 курс");
+    } // end if  выбрана заочная форма
+    else { // else  выбрана дневная форма
+        RadioGroup2 -> Items -> Add ("1 курс");
+        RadioGroup2 -> Items -> Add ("2 курс");
+        RadioGroup2 -> Items -> Add ("3 курс");
+        RadioGroup2 -> Items -> Add ("4 курс");
+        RadioGroup2 -> Items -> Add ("5 курс");
+    } // end else выбрана дневная форма
+    RadioGroup2 -> ItemIndex = -1;
+    RadioGroup2 -> Visible = true; // становится видимым курсы
+}
+
+
+void __fastcall TInfoForm::SpeedButton1Click (TObject *Sender) {
+    // -
+    BitBtn1 -> Visible = false;
+    BitBtn2 -> Visible = false;
+    RadioGroup4 -> Visible = false;
+    RadioGroup3 -> Visible = false;
+    Label1 -> Visible = false;
+    Label2 -> Visible = false;
+    Label3 -> Visible = false;
+    Label4 -> Visible = false;
+    Label5 -> Visible = false;
+    MaskEdit1 -> Visible = false;
+    // -
+    // 03%
+    yyy = ggg.CurrentDate ();
+    god_two = DateToStr (yyy.CurrentDate ()).SubString (7, 4);
+    //god_two = MaskEdit2 -> Text;
+    AnsiString Par_GOD = god_two.SubString (3, 2) + "%";
+    // временная переменная для работы с цифрами года
+    // Query, возвращающий максимальный номер зачетной книжке на факультете
+    DataModule1 -> Max_ZachetkaFDQuery -> Close ();
+    DataModule1 -> Max_ZachetkaFDQuery -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    DataModule1 -> Max_ZachetkaFDQuery -> ParamByName ("GOD") -> AsString = Par_GOD;
+    DataModule1 -> Max_ZachetkaFDQuery -> Open ();
+
+    // --
+    Label1 -> Visible = true;
+    Label4 -> Visible = true;
+    // --
+    Variant max_zach = DataModule1 -> Max_ZachetkaFDQueryMAX -> AsVariant;
+    if (!max_zach.IsNull ())
+    { // if есть номера зачеток на этом курсе, хотя бы у одного студента
+        Label4 -> Caption = DataModule1 -> Max_ZachetkaFDQueryMAX -> Value;
+    } // end if  есть номера зачеток на этом курсе, хотя бы у одного студента
+    else { // else  нет номеров зачеток
+        Label4 -> Caption = "нет";
+    } // end else нет номеров зачеток
+    AnsiString new_nom; // следующий по порядку номер зачетки
+    Par_GOD = "\\" + god_two.SubString (3, 1) + "\\" + god_two.SubString (4, 1);
+    // -----
+    if (StrToInt (MaskEdit2 -> Text) >= 2003)
+    { // if номер зачетки с 2003 года 6-ти значный по формату
+        // 2 цифры - учебный год; 1 цифра - факультет; 3 цифры номер п/п
+        AnsiString new_nom1 = "";
+        if (!max_zach.IsNull ()) {
+            new_nom = (Label4 -> Caption).SubString (4, 3);
+            int n_n = (StrToInt (new_nom) + 1);
+
+            switch (IntToStr (n_n).Length ()) {
+            case 1:
+                new_nom1 = "00" + IntToStr (n_n);
+                break;
+            case 2:
+                new_nom1 = "0" + IntToStr (n_n);
+                break;
+            case 3:
+                new_nom1 = IntToStr (n_n);
+                break;
+            }
+        }
+
+        if (nom_fac != 3)
+        { // if  СИиЕ и МВС, то создаем стандарт для   MaskEdit
+            // MaskEdit1 -> EditMask = "\\"+god_two.SubString (3,1)+"\\"+god_two.SubString (4,1)+"\\"+nom_fac+"000;_";
+            // MaskEdit1 -> Text="\\"+god_two.SubString (3,1)+"\\"+god_two.SubString (4,1)+"\\"+nom_fac+IntToStr (StrToInt (DataModule1 -> Max_ZachetkaQueryMAX -> Value)+1).SubString (4,3);
+            MaskEdit1 -> EditMask = Par_GOD + nom_fac + "999;_";
+            if (!max_zach.IsNull ()) {
+                MaskEdit1 -> Text = Par_GOD + nom_fac + new_nom1;
+            }
+            else
+                MaskEdit1 -> Text = Par_GOD + nom_fac + "001";
+        } // end if
+        else { // else ОФКиТ, то создаем стандарт для   MaskEdit
+            // MaskEdit1 -> EditMask = "\\"+god_two.SubString (3,1)+"\\"+god_two.SubString (4,1)+"\0000;_";
+            MaskEdit1 -> EditMask = Par_GOD + "\\0" + "999;_";
+            if (!max_zach.IsNull ()) {
+                MaskEdit1 -> Text = Par_GOD + "\\0" + new_nom1;
+            }
+            else
+                MaskEdit1 -> Text = Par_GOD + "\\0" + "001";
+        } // end else
+
+        // MaskEdit1 -> Text=IntToStr (StrToInt (DataModule1 -> Max_ZachetkaQueryMAX -> Value)+1).SubString (4,3);
+    } // end if номер зачетки с 2003 года 6-ти значный по формату
+    else { // else до 2003 года номер зачетки был 5-ти значный: 2 цифры - год; 3 цифры - № п/п
+        // MaskEdit1 -> EditMask = "\\"+god_two.SubString (3,1)+"\\"+god_two.SubString (4,1)+"\000;_";
+        // MaskEdit1 -> Text=StrToInt (Label4 -> Caption.SubString (3,3))+1;
+        new_nom = (Label4 -> Caption).SubString (3, 3);
+        int n_n = (StrToInt (new_nom) + 1);
+        AnsiString new_nom1 = "";
+        switch (IntToStr (n_n).Length ()) {
+        case 1:
+            new_nom1 = "00" + IntToStr (n_n);
+            break;
+        case 2:
+            new_nom1 = "0" + IntToStr (n_n);
+            break;
+        case 3:
+            new_nom1 = IntToStr (n_n);
+            break;
+        }
+
+        MaskEdit1 -> EditMask = Par_GOD + "999;_";
+        if (!max_zach.IsNull ()) {
+            MaskEdit1 -> Text = Par_GOD + new_nom1;
+        }
+        else
+            MaskEdit1 -> Text = Par_GOD + "001";
+    } // end else до 2003 года номер зачетки был 5-ти значный
+    // --
+    // Label2 -> Visible=true;
+    // MaskEdit1 -> Visible=true;
+    // RadioGroup3 -> Visible=true;//выбор всех или по студентам
+    // RadioGroup3 -> Enabled=true;
+    // --
+    DataModule1 -> ZachetkaFDQuery -> Close ();
+    DataModule1 -> ZachetkaFDQuery -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    // факультет
+    DataModule1 -> ZachetkaFDQuery -> ParamByName ("EDU") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex; // вид обучения
+    DataModule1 -> ZachetkaFDQuery -> ParamByName ("KURS") -> AsInteger =
+        RadioGroup2 -> ItemIndex + 1; // курс
+    DataModule1 -> ZachetkaFDQuery -> ParamByName ("YEAR_INCLUDE") -> AsInteger =
+        StrToInt (MaskEdit2 -> Text); // год поступления
+    DataModule1 -> ZachetkaFDQuery -> Open ();
+    DataModule1 -> ZachetkaFDQuery_Count -> Close ();
+    DataModule1 -> ZachetkaFDQuery_Count -> ParamByName ("FAC") -> AsSmallInt = nom_fac;
+    // факультет
+    DataModule1 -> ZachetkaFDQuery_Count -> ParamByName ("EDU") -> AsSmallInt =
+        RadioGroup1 -> ItemIndex; // вид обучения
+    DataModule1 -> ZachetkaFDQuery_Count -> ParamByName ("KURS") -> AsInteger =
+        RadioGroup2 -> ItemIndex + 1; // курс
+    DataModule1 -> ZachetkaFDQuery_Count -> ParamByName ("YEAR_INCLUDE") -> AsInteger =
+        StrToInt (MaskEdit2 -> Text); // год поступления
+    DataModule1 -> ZachetkaFDQuery_Count -> Open ();
+
+    record_zach = DataModule1 -> ZachetkaFDQuery_CountCOUNT -> Value;
+    Label3 -> Visible = true;
+    Label5 -> Visible = true;
+    Label5 -> Caption = IntToStr (record_zach);
+    // количество выбранных студентов без номеров зачеток
+    // ------
+    if (!record_zach) { // if  если нет студентов без номеров зачетных книжек
+        BitBtn2 -> Visible = true; // становится видимой кнопка передать в Excel
+        mas_none = true;
+        return;
+    } // end if
+    Label2 -> Visible = true;
+    MaskEdit1 -> Visible = true;
+    RadioGroup3 -> Visible = true; // выбор всех или по студентам
+    RadioGroup3 -> Enabled = true;
+
+    // формирование массива студентов для зачеток
+    /* for (int i = 0; i < 2; i++) { // for объявление массива
+     mas_nomer_zach[i] = new AnsiString[record_zach];
+     } // end for объявление массива */
+    // ---
+    DataModule1 -> ZachetkaFDQuery -> First (); // становимся на первую запись
+    // ---очищаем в MyList1  левый и правый список
+    DualListDlg = new TDualListDlg (this);
+    DualListDlg -> SrcList -> Items -> Clear ();
+    DualListDlg -> DstList -> Items -> Clear ();
+    // ---
+    for (int i = 0; i < record_zach; i++) { // for наполенение массива данными
+        // первая запись в массиве номер студента
+        /* mas_nomer_zach[0][i] =
+         IntToStr (DataModule1 -> ZachetkaFDQueryNOMER -> Value);
+         // следующая запись ФИО и номер группы
+         mas_nomer_zach[1][i] = DataModule1 -> ZachetkaFDQueryFAM -> Value + " " +
+         DataModule1 -> ZachetkaFDQueryNAME -> Value + " " +
+         DataModule1 -> ZachetkaFDQueryOTCH -> Value + " " +
+         DataModule1 -> ZachetkaFDQueryN_GROUP -> Value + " гр."; */
+        // заносим на всякий случай (если выберут самостоятельный выбор студентов)
+        // в MyList1 ФИО студенов
+        DualListDlg -> SrcList -> Items -> AddObject
+            (DataModule1 -> ZachetkaFDQueryFAM -> Value + " " +
+            DataModule1 -> ZachetkaFDQueryNAME -> Value + " " +
+            DataModule1 -> ZachetkaFDQueryOTCH -> Value + " " +
+            DataModule1 -> ZachetkaFDQueryN_GROUP -> Value + " гр.",
+            (TObject *) (DataModule1 -> ZachetkaFDQueryNOMER -> Value));
+        DataModule1 -> ZachetkaFDQuery -> Next ();
+    } // end for наполенение массива данными
+    // mas_ch = true; // переменная о том что массив создан
+    // -------
+}
+
+
+void __fastcall TInfoForm::MaskEdit1Exit (TObject *Sender) {
+    if ( ( (StrToInt (MaskEdit2 -> Text) >= 2003) && ( (MaskEdit1 -> Text).Trim () != 6))
+        || ( (StrToInt (MaskEdit2 -> Text) < 2003) && ( (MaskEdit1 -> Text).Trim ()
+        != 5))) {
+
+        // !!!if (Application -> MessageBox ("Вы ввели неправильный номер зачетки. Хотите его исправить?", "ОШИБКА", MB_YESNO) == mrYes)
+        if (MessageDlg
+            ("Вы ввели неправильный номер зачетки. Хотите его исправить?",
+            mtConfirmation, TMsgDlgButtons () << mbYes << mbNo, 0) == mrYes) {
+            MaskEdit1 -> SetFocus ();
+        }
+        else {
+            MaskEdit1 -> Text = "";
+        }
+
+    }
+}
+
+
+void __fastcall TInfoForm::MaskEdit2Change (TObject *Sender) {
+    // ------
+    // del_mas (mas_ch); // удаление массива
+    // mas_ch = false; // установка переменной в состояние удаленного массива
+    // -----
+    Label1 -> Visible = false;
+    Label2 -> Visible = false;
+    Label3 -> Visible = false;
+    Label4 -> Visible = false; // последний номер зачетной книжки для этого года
+    Label5 -> Visible = false;
+    // количество выбранных студентов у которых нет номера зачетной книжки
+    MaskEdit1 -> Visible = false; // предположительный номер зачетной книжки
+    RadioGroup3 -> Visible = false; // выбор всех или по студентам
+    RadioGroup3 -> ItemIndex = -1;
+
+    BitBtn1 -> Visible = false;
+    BitBtn2 -> Visible = false;
+    RadioGroup4 -> Visible = false;
+    // ------
+}
+
+
+void __fastcall TInfoForm::RadioGroup3Click (TObject *Sender) {
+
+    switch (RadioGroup3 -> ItemIndex)
+    { // switch  возможность выбора определенных студентов для нумерации зачетных книжек
+    case 1: // Мой компонент
+        DualListDlg -> ShowModal ();
+        if (DataModule2 -> printdlg == true) { // if выполняется компонент
+            if (DualListDlg -> DstList -> Items -> Count != 0) {
+                /* for (int i = 0; i < DualListDlg -> SrcList -> Items -> Count - 1; i++)
+                 { //
+                 for (int j = 0; j < record_zach; j++)
+                 { // for j  цикл по количеству всех возможных студентов
+                 if (DualListDlg -> SrcList -> Items -> Strings[i]
+                 == mas_nomer_zach[1][j]) {
+                 // if очищение элементов массива для невыбранных студентов
+                 mas_nomer_zach[0][j] = "";
+                 mas_nomer_zach[1][j] = "";
+                 } // end if очищение элементов массива для невыбранных студентов
+                 } // end for j цикл по количеству всех возможных студентов
+
+                 } // end  for i  цикл по количеству студентов в начальном списке */
+                BitBtn1 -> Visible = true;
+            }
+        } // end if выполняется компонент
+        else { // else отменили в компоненте выбор студентов
+            BitBtn1 -> Visible = false;
+        } // end else отменили в компоненте выбор студентов
+        Label5 -> Caption = IntToStr (DualListDlg -> DstList -> Items -> Count);
+        RadioGroup3 -> Enabled = false;
+
+        break;
+    case 0: // выбор всех для нумерации
+        BitBtn1 -> Visible = true;
+        // становится видимой кнопка Пронумеровать зачетки
+        break;
+    } // end switch  возможность выбора определенных студентов для нумерации зачетных книжек
+
+}
+
+
+void __fastcall TInfoForm::BitBtn1Click (TObject *Sender)
+{ // Пронумеровать зачетки
+    if (Label5 -> Caption == "0") {
+        ShowMessage ("Не было выбрано студентов для нумерации зачеток!");
+        return;
+    }
+    AnsiString zach1 = MaskEdit1 -> Text; // полный номер зачетки
+    int n_zach; // номер зачетки № п/п
+    if (StrToInt (MaskEdit2 -> Text) >= 2003)
+    { // if для шестизначного номера зачетки
+        n_zach = StrToInt (zach1.SubString (4, 3));
+        zach1 = zach1.SubString (1, 3);
+
+    } // end if для шестизначного номера зачетки
+    else { // else if для пятизначного номера зачетки
+        n_zach = StrToInt (zach1.SubString (3, 3));
+        zach1 = zach1.SubString (1, 2);
+
+    } // end else if для пятизначного номера зачетки
+
+    try { // try
+        switch (RadioGroup3 -> ItemIndex)
+        { // switch  возможность выбора определенных студентов для нумерации зачетных книжек
+        case 1: // Мой компонент
+            for (int i = 0; i < DualListDlg -> DstList -> Items -> Count; i++)
+            { // for i
+
+                AnsiString new_n_zach = "";
+                TLocateOptions Opts;
+                Opts.Clear ();
+                DataModule1 -> ZachetkaFDQuery -> Locate ("NOMER",
+                    (int) (DualListDlg -> DstList -> Items -> Objects[i]), Opts);
+                DataModule1 -> ZachetkaFDQuery -> Edit ();
+                switch (IntToStr (n_zach).Length ()) {
+                case 1:
+                    new_n_zach = zach1 + "00" + IntToStr (n_zach);
+                    break;
+                case 2:
+                    new_n_zach = zach1 + "0" + IntToStr (n_zach);
+                    break;
+                case 3:
+                    new_n_zach = zach1 + IntToStr (n_zach);
+                    break;
+                }
+                DataModule1 -> ZachetkaFDQueryN_ZACHET -> Value = new_n_zach;
+                DataModule1 -> ZachetkaFDQuery -> ApplyUpdates ();
+                DataModule1 -> ZachetkaFDQuery -> CommitUpdates ();
+                // ShowMessage ("У студента "+mas_nomer_zach[1][i]+" номер зачетки "+new_n_zach);
+                n_zach++;
+
+            } // end for i
+
+            BitBtn1 -> Visible = false;
+            // делаем невидимой кнопке пронумеровать зачетки
+            RadioGroup4 -> Visible = true; // видимый элемент для передачи в Excel
+
+            // -
+            // BitBtn1 -> Visible=false;
+            BitBtn2 -> Visible = false;
+            // RadioGroup4 -> Visible=false;
+            RadioGroup3 -> Visible = false;
+            Label1 -> Visible = false;
+            Label2 -> Visible = false;
+            Label3 -> Visible = false;
+            Label4 -> Visible = false;
+            Label5 -> Visible = false;
+            MaskEdit1 -> Visible = false;
+            // -
+            break;
+        case 0: // выбор всех для нумерации
+        DataModule1 -> ZachetkaFDQuery -> First ();
+            for (int i = 0; i < record_zach; i++) { // for i
+                AnsiString new_n_zach = "";
+                TLocateOptions Opts;
+                Opts.Clear ();
+                DataModule1 -> ZachetkaFDQuery -> Edit ();
+                switch (IntToStr (n_zach).Length ()) {
+                case 1:
+                    new_n_zach = zach1 + "00" + IntToStr (n_zach);
+                    break;
+                case 2:
+                    new_n_zach = zach1 + "0" + IntToStr (n_zach);
+                    break;
+                case 3:
+                    new_n_zach = zach1 + IntToStr (n_zach);
+                    break;
+                }
+                DataModule1 -> ZachetkaFDQueryN_ZACHET -> Value = new_n_zach;
+                DataModule1 -> ZachetkaFDQuery -> ApplyUpdates ();
+                DataModule1 -> ZachetkaFDQuery -> CommitUpdates ();
+                // ShowMessage ("У студента "+mas_nomer_zach[1][i]+" номер зачетки "+new_n_zach);
+                n_zach++;
+                DataModule1 -> ZachetkaFDQuery -> Next ();
+            } // end for i
+
+            BitBtn1 -> Visible = false;
+            // делаем невидимой кнопке пронумеровать зачетки
+            RadioGroup4 -> Visible = true; // видимый элемент для передачи в Excel
+
+            // -
+            // BitBtn1 -> Visible=false;
+            BitBtn2 -> Visible = false;
+            // RadioGroup4 -> Visible=false;
+            RadioGroup3 -> Visible = false;
+            Label1 -> Visible = false;
+            Label2 -> Visible = false;
+            Label3 -> Visible = false;
+            Label4 -> Visible = false;
+            Label5 -> Visible = false;
+            MaskEdit1 -> Visible = false;
+            // -
+            break;
+        } // end switch  возможность выбора определенных студентов для нумерации зачетных книжек
+
+    } // end try
+    catch (...) {
+        DataModule1 -> ZachetkaFDQuery -> CancelUpdates ();
+        ShowMessage ("Произошел сбой! Попробуйте еще раз.");
+    }
+}
+
+
+void __fastcall TInfoForm::RadioGroup4Click (TObject *Sender) {
+    switch (RadioGroup4 -> ItemIndex) { // switch
+    case 0: // Всех студентов, выбранного курса
+        DataModule1 -> Zachetka_All_KursFDQuery -> Close ();
+
+        DataModule1 -> Zachetka_All_KursFDQuery -> ParamByName ("FAC") -> AsSmallInt =
+            nom_fac; // факультет
+        DataModule1 -> Zachetka_All_KursFDQuery -> ParamByName ("EDU") -> AsSmallInt =
+            RadioGroup1 -> ItemIndex; // вид обучения
+        DataModule1 -> Zachetka_All_KursFDQuery -> ParamByName ("KURS") -> AsInteger =
+            RadioGroup2 -> ItemIndex + 1; // курс
+
+        DataModule1 -> Zachetka_All_KursFDQuery -> Open ();
+        break;
+    case 1: // Только студентов, которым сейчас дали номера зачеток
+
+        break;
+    } // end switch
+    BitBtn2 -> Visible = true;
+    RadioGroup4 -> Visible = false;
+}
+
+
+void __fastcall TInfoForm::BitBtn2Click (TObject *Sender)
+{ // кнопка Передать в Excel
+    // ExPril , PrilBook, PrilSheet
+    ExPril = Variant::CreateObject ("Excel.Application");
+    ColWorkSheet (ExPril, (Variant)1);
+    PrilBook = NewBook (ExPril);
+    // 
+    Variant Rang1; // переменная для выделения ячеек
+
+    if (RadioGroup4 -> ItemIndex && !mas_none)
+    { // if выборка студентов из массива
+        int str = 3;
+        PrilSheet = NewSheet1 (ExPril);
+        NameSheet1 (PrilSheet, "Номера зачетных книжек");
+        SelectSheet (PrilBook, "Номера зачетных книжек");
+        Create_Shapka ();
+        for (int i = 0; i < DualListDlg -> DstList -> Items -> Count; i++) { // for i
+
+            TLocateOptions Opts;
+            Opts.Clear ();
+            DataModule1 -> ZachetkaFDQuery -> Locate ("NOMER",
+                (int) (DualListDlg -> DstList -> Items -> Objects[i]), Opts);
+
+            CellValue (str - 2, 1, str + 1);
+            BorderCell (1, str + 1, 1, 2); // номер п/п
+            CellValue (DataModule1 -> ZachetkaFDQueryFAM -> Value + " " +
+                DataModule1 -> ZachetkaFDQueryNAME -> Value + " " +
+                DataModule1 -> ZachetkaFDQueryOTCH -> Value, 2, str + 1);
+            BorderCell (2, str + 1, 1, 2); // ФИО
+            ///Номер зачетной книжки
+            Variant cell = SelectCell (3, str + 1);
+            SheetFormat (cell, "@");
+            // формат ячейки  для номера зачетки - текстовый
+            CellValue (DataModule1 -> ZachetkaFDQueryN_ZACHET -> Value, 3, str + 1);
+            BorderCell (3, str + 1, 1, 2); // № зачетки
+            ///Номер группы
+            cell = SelectCell (4, str + 1);
+            SheetFormat (cell, "@");
+            // формат ячейки  для номера зачетки - текстовый
+            CellValue (DataModule1 -> ZachetkaFDQueryN_GROUP -> Value, 4,
+                str + 1); // группа
+
+            // обрамление оставшихся столбцов
+            BorderCell (4, str + 1, 1, 2); // группа
+            BorderCell (5, str + 1, 1, 2); // дата
+            BorderCell (6, str + 1, 1, 2); // подпись
+
+            str++;
+
+        } // end for i
+        // выделение диапазона столбца с номером зачетки для помещения по ценру
+        Variant Cell1 = "C3";
+        Variant Cell2 = "C" + IntToStr (str);
+        Rang1 = Range_Range (PrilSheet, Cell1, Cell2);
+        HorizontalAlign (Rang1, 3); // выравнивание по центру */
+        AutoFitColumn (PrilSheet, 2); // автоподбор ширины столбца ФИО
+    } // end if выборка студентов из массива
+    else { // else  выборка студентов всего курса
+
+        if (DataModule1 -> Zachetka_All_KursFDQuery -> State == dsInactive)
+        { // if  если не было студентов для нумерации, то надо открыть набор данных
+            DataModule1 -> Zachetka_All_KursFDQuery -> Close ();
+            DataModule1 -> Zachetka_All_KursFDQuery -> ParamByName ("FAC")
+                -> AsSmallInt = nom_fac; // факультет
+            DataModule1 -> Zachetka_All_KursFDQuery -> ParamByName ("EDU")
+                -> AsSmallInt = RadioGroup1 -> ItemIndex; // вид обучения
+            DataModule1 -> Zachetka_All_KursFDQuery -> ParamByName ("KURS")
+                -> AsInteger = RadioGroup2 -> ItemIndex + 1; // курс
+            DataModule1 -> Zachetka_All_KursFDQuery -> Open ();
+        } // end if  если не было студентов для нумерации, то надо открыть набор данных
+
+        while (!DataModule1 -> Zachetka_All_KursFDQuery -> Eof) { // while
+            Create_Spisok_Zachetka ();
+            // создание списка всех студентов курса с номерами зачеток
+        } // end while
+
+        DataModule1 -> Zachetka_All_KursFDQuery -> Close ();
+
+    } // end else выборка студентов всего курса
+    // ---сохранение файла
+    AnsiString name_f = "Номера зачеток студентов факультета " +
+        DM2 -> FacultyFDTable -> Lookup ("N_FAC", nom_fac, "FAC1") + " за " +
+        cur_d () + ".xls";
+    Variant WorkSaveAs = SaveBookAs (PrilBook, "d:\\Мои документы\\" + name_f);
+    OVisible (ExPril);
+
+    ExPril.Clear ();
+    // ------
+    // del_mas (mas_ch); // удаление массива
+    // mas_ch = false; // установка переменной в состояние удаленного массива
+
+    // -----
+    Label6 -> Visible = false; // Label  годa поступления
+    MaskEdit2 -> Visible = false; // год поступления
+
+    Label1 -> Visible = false;
+    Label2 -> Visible = false;
+    Label3 -> Visible = false;
+    Label4 -> Visible = false; // последний номер зачетной книжки для этого года
+    Label5 -> Visible = false;
+    // количество выбранных студентов у которых нет номера зачетной книжки
+    MaskEdit1 -> Visible = false; // предположительный номер зачетной книжки
+
+    Label6 -> Visible = false; // Label    года
+    MaskEdit2 -> Visible = false; // предположительный год
+    SpeedButton1 -> Visible = false;
+    // кнопка выбора максимального значения зачетки за выбранный год
+    RadioGroup3 -> Visible = false; // выбор всех или по студентам
+    RadioGroup3 -> ItemIndex = -1;
+
+    RadioGroup1 -> ItemIndex = -1;
+    RadioGroup2 -> ItemIndex = -1;
+    RadioGroup4 -> ItemIndex = -1;
+
+    BitBtn1 -> Visible = false;
+    BitBtn2 -> Visible = false;
+    RadioGroup4 -> Visible = false;
+
+    mas_none = false;
+    // ------
+
+}
+
+
+
+void __fastcall TInfoForm::BitBtn3Click (TObject *Sender) {
+    year_uch = "'" + IntToStr (uch_god) + "/" + (uch_god + 1) + "'";
+
+    DM4 -> FDConnectionCards_TR -> Connected = true;
+    DM4 -> FDConnectionCards -> Connected = true;
+    // открываем Q Форма образования CARDSTRANSFER
+    DM4 -> VidEduQ -> Close ();
+    DM4 -> VidEduQ -> Open ();
+    // открываем Q Студенты CARDSTRANSFER
+    DM4 -> TrStudQ -> Close ();
+    DM4 -> TrStudQ -> Open ();
+    DM4 -> TrStudQ_Count -> Close ();
+    DM4 -> TrStudQ_Count -> Open ();
+    DM4 -> FDTable1 -> Close ();
+    DM4 -> FDTable1 -> Open ();
+    DataModule1 -> StudQ -> Close ();
+    DataModule1 -> StudQ -> ParamByName ("fac") -> AsInteger = nom_fac;
+    DataModule1 -> StudQ -> Open ();
+    DataModule1 -> StudQ_Count -> Close ();
+    DataModule1 -> StudQ_Count -> ParamByName ("fac") -> AsInteger = nom_fac;
+    DataModule1 -> StudQ_Count -> Open ();
+    String msg = "";
+    String msgTitle = "";
+    msg = "Вы действительно хотите обновить данные!";
+    msgTitle = "Внимание!";
+    if (Application -> MessageBox (msg.w_str (), msgTitle.w_str (),
+        MB_YESNO + MB_ICONWARNING) == mrYes) { // if msg
+        up_stud = true; // данные обновляются
+        DataModule1 -> StudQ -> First ();
+        for (int i = 0; i < DataModule1 -> StudQ_CountCOUNT -> Value; i++) { // for StudQ
+            nomer_st = DataModule1 -> StudQNOMER -> Value; // ID студента
+            UpStud (); // вызов процедуры
+            DM4 -> FDTable1PHOTO -> Value = DataModule1 -> StudQPHOTO -> Value;
+            DM4 -> FDTable1SIGNATURE -> Value = DataModule1 -> StudQDIGIT_SIGN -> Value;
+            SaveTrStud ();
+            DataModule1 -> StudQ -> Next (); // переход на след. студента
+        } // end for StudQ
+
+        up_stud = false; // обновления завершено
+        // показывать сообщение, если все ОК
+        if (well == true)
+            ShowMessage ("Обновление прошло удачно!");
+        DataModule1 -> StudQ -> Close (); // закрываем Q выбора студентов из деканата
+        DataModule1 -> StudQ_Count -> Close ();
+    } // end if msg
+    else { // else msg
+        up_stud = false; // данные не обновляются
+       } // end else msg
+}
+
+void __fastcall TInfoForm::UpStud () {
+    DM4 -> TrStudQ -> First ();
+    for (int j = 0; j <= DM4 -> TrStudQ_CountCOUNT -> Value; j++)
+    { // for TrStudQ (есть ли такой ID в БД CARDSTRANSFER)
+        Flags.Clear ();
+        if (DM4 -> TrStudQ -> Locate ("ROWGUID", nomer_st, Flags)) { // if есть
+            n_r = true; // Q Edit ();
+            break;
+        } // end if есть
+        else { // else нет
+            n_r = false;
+            break;
+        } // end else нет
+    } // end for TrStudQ (есть ли такой ID в БД CARDSTRANSFER)
+
+    // ---таблица PASPORT_TR
+    DM4 -> TrPasportQ -> Close ();
+    DM4 -> TrPasportQ -> ParamByName ("rowguid") -> AsInteger = nomer_st;
+    DM4 -> TrPasportQ -> Open ();
+
+    // ---таблица PERS_STUD_TR
+    DM4 -> TrPersQ -> Close ();
+    DM4 -> TrPersQ -> ParamByName ("rowguid") -> AsInteger = nomer_st;
+    DM4 -> TrPersQ -> Open ();
+
+    StateQ (); // состояние Q
+    // таблица STUDENT_TR
+    nomer_st = DataModule1 -> StudQNOMER -> Value; // запоминаем ID студента
+    DM4 -> TrStudQROWGUID -> Value = nomer_st; // ID студента
+    DM4 -> TrStudQFAM_TR -> Value = DataModule1 -> StudQFAM -> Value; // Фамилия
+    DM4 -> TrStudQNAME_TR -> Value = DataModule1 -> StudQNAME -> Value; // Имя
+    DM4 -> TrStudQOTCH_TR -> Value = DataModule1 -> StudQOTCH -> Value; // Отчетсво
+    // ---
+    int status_stud = 0;
+    status_stud = DataModule1 -> StudQSTATUS_PEOPLE -> Value;
+    // ACTIVE_STUDENT=1,
+    if (status_stud == 1)
+        DM4 -> TrStudQACTIVE_STUDENT -> Value = 1; // 1-не заблокирован, 0-заблокирован
+    else
+        DM4 -> TrStudQACTIVE_STUDENT -> Value = 0;
+
+    DM4 -> TrStudQID_FAC -> Value = DataModule1 -> StudQN_FAC -> Value; // ID факультета
+    // ---Форма обучения ID
+    int vid_edu = DataModule1 -> StudQVID_EDU -> Value;
+    DM4 -> TrStudQID_VID_EDU -> Value = vid_edu; // ID форма обучения
+    // ---
+    DM4 -> TrStudQID_SPEC -> Value = DataModule1 -> StudQN_SPECIALIZ -> Value; // ID специальность
+    // ---Курс (ID==курс)
+    int kurs = DataModule1 -> StudQKURS -> Value;
+    DM4 -> TrStudQID_KURS -> Value = kurs; // ID курс=курс
+    // ---
+    DM4 -> TrStudQID_STUD_TYPE -> Value = 1; // 1-Студент, 2-Магистрант
+    DM4 -> TrStudQNOM_Z -> Value = DataModule1 -> StudQN_ZACHET -> Value;
+    // Номер зачетки=номер студ.билета
+    // ---Пол
+    AnsiString pol = "";
+    pol = DataModule1 -> StudQPOL -> Value;
+    if (pol != "" & pol == "М")
+        DM4 -> TrStudQPOL -> Value = 1;
+    else if (pol != "" & pol == "Ж")
+        DM4 -> TrStudQPOL -> Value = 0;
+    // ---
+    DM4 -> TrStudQCITYZENSHIP -> Value = DataModule1 -> StudQGRAGDAN -> Value; // Гражданство
+    DM4 -> TrStudQN_GROUP -> Value = DataModule1 -> StudQN_GROUP -> Value; // Номер группы
+
+    // ---Год поступления
+    AnsiString date_include =
+        DateTimeToStr (SQLTimeStampToDateTime (DataModule1 -> StudQD_PRIKAZ_INCLUDE -> Value));
+    int year_include = date_include.SubString (7, 4).ToInt ();
+    DM4 -> TrStudQADD_YEAR -> Value = year_include;
+
+    // DM -> TrStudQDATE_ZACH -> Value=DM -> StudQD_PRIKAZ_INCLUDE -> Value;     //Дата приказа о зачислении
+    // ---ДАТА ЗАЧИСЛЕНИЯ
+    AnsiString date_zac = "";
+
+    date_zac = "01.09." + IntToStr (year_include);
+    // year_include из приказа о зачислении!!!!
+
+    DM4 -> TrStudQDATE_ZACH -> Value = DateTimeToSQLTimeStamp (StrToDate (date_zac));
+
+    // ---
+    DM4 -> TrStudQUCH_YEAR -> Value =year_uch;
+    // Текущий учебный год на момент обновления
+
+    // Дата окончания 30.06.2___ //ПРОВЕРИТЬ!!!!! Не всегда привилоно!!!!
+    AnsiString kurs_uch = "", year_end = "", date_end = "";
+     year_add = uch_god;
+    if (vid_edu == 1) { // заочная
+        kurs_uch = 6 - kurs; // сколько курсов учиться
+        year_end = year_add + kurs_uch; // год окончания
+        if (kurs_uch == 0)
+            year_end = year_add + 1; // год окончания
+    }
+    else { // дневная
+        kurs_uch = 5 - kurs; // сколько курсов учиться
+        year_end = year_add + kurs_uch; // год окончания
+        if (kurs_uch == 0)
+            year_end = year_add + 1; // год окончания
+    }
+    date_end = "30.06." + year_end;
+    DM4 -> TrStudQDATE_END -> Value = DateTimeToSQLTimeStamp (StrToDate (date_end));
+    DM4 -> TrStudQID_VUZ -> Value = 1; // ВУЗ
+    DM4 -> TrStudQDEKAN -> Value = DataModule1 -> StudQN_FAC -> Value; // Декан
+    // ---таблица PASPORT_TR
+
+    AnsiString pasport = "", series = "", number = "";
+    pasport = DataModule1 -> StudQPASPORT -> Value; // серия+номер паспорта
+    DM4 -> TrPasportQROWGUID -> Value = nomer_st; // ID студента
+    DM4 -> TrPasportQPERSONAL_NUMBER -> Value = DataModule1 -> StudQPERSONAL_NOMER -> Value;
+    DM4 -> TrPasportQPASPORT -> Value = pasport;
+    int index = pasport.Pos (" "); // если есть пробел
+    if (index != 0) {
+        series = pasport.SubString (0, pasport.Pos (" ") - 1); // отрезаем серию
+        number = pasport.SubString (pasport.Pos (" ") + 1, pasport.Length ());
+        // отрезаем номер
+    }
+    else { // else нет пробела - отрезаем первые два символа в серию
+        series = pasport.SubString (1, 2); // отрезаем серию
+        number = pasport.SubString (3, pasport.Length ()); // отрезаем номер
+    }
+    DM4 -> TrPasportQSERIES -> Value = series;
+    DM4 -> TrPasportQNUMBER -> Value = number;
+    // ---таблица PERS_STUD_TR
+
+    DM4 -> TrPersQROWGUID -> Value = nomer_st; // ID студента
+    DM4 -> TrPersQLOGIN -> Value = nomer_st; // Логин
+    DM4 -> TrPersQE_MAIL -> Value = ""; // e-mail
+
+    DM4 -> FDTable1IDDATABASES -> Value = 1;
+    DM4 -> FDTable1IDPERSON -> Value = nomer_st;
+    DM4 -> FDTable1PHOTO -> Value = DataModule1 -> StudQPHOTO -> Value;
+    DM4 -> FDTable1SIGNATURE -> Value =
+            DataModule1 -> StudQDIGIT_SIGN -> Value;
+    // вызов процедуры сохранения студентов в БД
+}
+
+
+void __fastcall TInfoForm::SaveTrStud ()
+{
+// процедура сохранения студета в БД CARDSTRANSFER
+    try { // сохранение в БД
+        DM4 -> TrStudQ -> ApplyUpdates ();
+        DM4 -> TrStudQ -> CommitUpdates ();
+
+        DM4 -> TrPasportQ -> ApplyUpdates ();
+        DM4 -> TrPasportQ -> CommitUpdates ();
+
+        DM4 -> TrPersQ -> ApplyUpdates ();
+        DM4 -> TrPersQ -> CommitUpdates ();
+
+        DM4 -> FDTable1 -> ApplyUpdates ();
+        DM4 -> FDTable1 -> CommitUpdates ();
+
+    }
+    catch (...) { // catch
+        ShowMessage ("Произошел сбой при обновлении!");
+        DM4 -> TrStudQ -> CancelUpdates ();
+        DM4 -> TrPasportQ -> CancelUpdates ();
+        DM4 -> TrPersQ -> CancelUpdates ();
+        DM4 -> FDTable1 -> CommitUpdates ();
+        well = false; // сбой при обновлении
+        return;
+    } // end catch
+} // end процедура сохранения студета в БД CARDSTRANSFER
+
+
+void __fastcall TInfoForm::StateQ () { // процедура состояний Q
+    if (n_r == true) {
+        DM4 -> TrStudQ -> Edit ();
+        DM4 -> TrPersQ -> Edit ();
+        DM4 -> TrPasportQ -> Edit ();
+
+    }
+    else {
+        DM4 -> TrStudQ -> Insert ();
+        DM4 -> TrPersQ -> Insert ();
+        DM4 -> TrPasportQ -> Insert ();
+    }
+    if (DM4 -> FDTable1 -> Locate ("IDPERSON", nomer_st, Flags)) { // if есть
+        DM4 -> FDTable1 -> Edit (); // Q Edit ();
+        // break;
+    } // end if есть
+    else { // else нет
+        DM4 -> FDTable1 -> Insert ();
+        // break;
+    } // end else нет
+} // end процедура состояний Q

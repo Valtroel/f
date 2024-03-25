@@ -1,0 +1,282 @@
+<?xml version='1.0' encoding='utf-8' ?>
+<!-- C++Builder XML Project -->
+<PROJECT>
+  <MACROS>
+    <VERSION value="BCB.06.00"/>
+    <PROJECT value="Dekanat.exe"/>
+    <OBJFILES value="Dekanat.obj MainUnit.obj SpravUnit.obj DataModule.obj StudUnit.obj 
+      CalendarUnit.obj AboutUnit.obj SportUnit.obj DeloUnit.obj PassUnit.obj 
+      DialogPassUnit.obj StatisticUnit.obj SplashUnit.obj VedomostUnit.obj 
+      Edu_planUnit.obj Add_Edu_planUnit.obj VedUnit.obj Ved_ReportUnit.obj 
+      Result_VedUnit.obj Ball_Unit.obj Dop_VedUnit.obj Dop_Ved_ReportUnit.obj 
+      SessionUnit.obj DM2Unit.obj SpisocUnit.obj People_Card_ReportUnit.obj 
+      Func.obj All_StatisticUnit.obj PassDlgUnit.obj InfoUnit.obj 
+      Semestr_SessionUnit.obj DialogVed.obj DataModule_Card.obj 
+      Add_UchKartUnit.obj DM3Unit.obj Svod_VedUnit.obj Ved_GEKUnit.obj 
+      Vipusk_StudUnit.obj ADD_Ved_GEKUnit.obj VED_GEKResultUnit.obj 
+      BallGEKUnit.obj Perezach_UchKartUnit.obj Dop_Ved_RaznicaUnit.obj 
+      Stud_Pr_RestoreUnit.obj Prikaz_LikvidUnit.obj Ved_LikvidUnit.obj 
+      Dop_Ved_LikvidReportUnit.obj Ball_LikvidUnit.obj Rating_ReportUnit.obj 
+      Ved_RatingUnit.obj Dop_Ved_RatingUnit.obj Result_Ball_RatingUnit.obj 
+      Result_RatingUnit.obj PeopleVedUnit.obj SpisokAllUnit.obj SpravkiUnit.obj 
+      PrivilegeUnit.obj DiplomUnit.obj NK_3Unit.obj LikvidUchPlanUnit.obj 
+      VipusknikiUnit.obj AutoDiplomUnit.obj Raspred_StateUnit.obj EhLibBDE.obj 
+      PasportUnit.obj DM4Unit.obj"/>
+    <RESFILES value="Dekanat.res"/>
+    <IDLFILES value=""/>
+    <IDLGENFILES value=""/>
+    <DEFFILE value=""/>
+    <RESDEPEN value="$(RESFILES) MainUnit.dfm SpravUnit.dfm DataModule.dfm StudUnit.dfm 
+      CalendarUnit.dfm AboutUnit.dfm SportUnit.dfm DeloUnit.dfm PassUnit.dfm 
+      DialogPassUnit.dfm StatisticUnit.dfm SplashUnit.dfm VedomostUnit.dfm 
+      Edu_planUnit.dfm Add_Edu_planUnit.dfm VedUnit.dfm Ved_ReportUnit.dfm 
+      Result_VedUnit.dfm Ball_Unit.dfm Dop_VedUnit.dfm Dop_Ved_ReportUnit.dfm 
+      SessionUnit.dfm DM2Unit.dfm SpisocUnit.dfm People_Card_ReportUnit.dfm 
+      All_StatisticUnit.dfm PassDlgUnit.dfm InfoUnit.dfm Semestr_SessionUnit.dfm 
+      DialogVed.dfm DataModule_Card.dfm Add_UchKartUnit.dfm DM3Unit.dfm 
+      Svod_VedUnit.dfm Ved_GEKUnit.dfm Vipusk_StudUnit.dfm ADD_Ved_GEKUnit.dfm 
+      VED_GEKResultUnit.dfm BallGEKUnit.dfm Perezach_UchKartUnit.dfm 
+      Dop_Ved_RaznicaUnit.dfm Stud_Pr_RestoreUnit.dfm Prikaz_LikvidUnit.dfm 
+      Ved_LikvidUnit.dfm Dop_Ved_LikvidReportUnit.dfm Ball_LikvidUnit.dfm 
+      Rating_ReportUnit.dfm Ved_RatingUnit.dfm Dop_Ved_RatingUnit.dfm 
+      Result_Ball_RatingUnit.dfm Result_RatingUnit.dfm PeopleVedUnit.dfm 
+      SpisokAllUnit.dfm SpravkiUnit.dfm PrivilegeUnit.dfm DiplomUnit.dfm 
+      NK_3Unit.dfm LikvidUchPlanUnit.dfm VipusknikiUnit.dfm AutoDiplomUnit.dfm 
+      Raspred_StateUnit.dfm PasportUnit.dfm DM4Unit.dfm"/>
+    <LIBFILES value=""/>
+    <LIBRARIES value="dbxcds.lib soaprtl.lib inetdbxpress.lib inetdbbde.lib nmfast.lib indy.lib 
+      dclocx.lib bcbie.lib dsnapcon.lib dsnapcrba.lib visualdbclx.lib teeqr.lib 
+      teedb.lib teeui.lib bdecds.lib vcldbx.lib adortl.lib EhLibB60.lib 
+      rxbde6.lib rxctl6.lib rxdb6.lib dbexpress.lib dsnap.lib cds.lib FR6.lib 
+      bcb2kaxserver.lib Package1.lib ibxpress.lib qrpt.lib tee.lib dss.lib 
+      vclx.lib bcbsmp.lib bdertl.lib vcldb.lib dbrtl.lib vcl.lib rtl.lib"/>
+    <SPARELIBS value="rtl.lib vcl.lib dbrtl.lib vcldb.lib bdertl.lib bcbsmp.lib vclx.lib dss.lib 
+      tee.lib qrpt.lib ibxpress.lib Package1.lib bcb2kaxserver.lib FR6.lib 
+      cds.lib dsnap.lib dbexpress.lib rxdb6.lib rxctl6.lib rxbde6.lib 
+      EhLibB60.lib adortl.lib vcldbx.lib bdecds.lib teeui.lib teedb.lib 
+      teeqr.lib visualdbclx.lib dsnapcrba.lib dsnapcon.lib bcbie.lib dclocx.lib 
+      indy.lib nmfast.lib inetdbbde.lib inetdbxpress.lib soaprtl.lib dbxcds.lib"/>
+    <PACKAGES value="vclx.bpi rtl.bpi vcl.bpi dbrtl.bpi vcldb.bpi bdertl.bpi vcldbx.bpi 
+      bcbsmp.bpi dclocx.bpi qrpt.bpi teeui.bpi vclsmp.bpi teedb.bpi tee.bpi 
+      ibsmp.bpi dss.bpi nmfast.bpi inetdb.bpi inet.bpi dsnap.bpi adortl.bpi 
+      EhLibB60.bpi ibxpress.bpi EhLibDataDriversB60.bpi Package1.bpi"/>
+    <PATHCPP value=".;"/>
+    <PATHPAS value=".;"/>
+    <PATHRC value=".;"/>
+    <PATHASM value=".;"/>
+    <DEBUGLIBPATH value="$(BCB)\lib\debug"/>
+    <RELEASELIBPATH value="$(BCB)\lib\release"/>
+    <LINKER value="ilink32"/>
+    <USERDEFINES value="_DEBUG"/>
+    <SYSDEFINES value="NO_STRICT"/>
+    <MAINSOURCE value="Dekanat.cpp"/>
+    <INCLUDEPATH value="$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\EhLib;&quot;C:\Program Files\Borland\CBuilder6\Projects\Lib&quot;;&quot;C:\Program Files\Borland\CBuilder6\Include\!setup\MyList&quot;;&quot;C:\Program Files\Borland\CBuilder6\Include\!setup\FastReport\LibBCB6&quot;"/>
+    <LIBPATH value="$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\EhLib;&quot;C:\Program Files\Borland\CBuilder6\Projects\Bpl&quot;;&quot;C:\Program Files\Borland\CBuilder6\Include\!setup\MyList&quot;"/>
+    <WARNINGS value="-w-par -w-8027 -w-8026"/>
+    <WARNOPTSTR value=""/>
+    <OTHERFILES value=""/>
+  </MACROS>
+  <OPTIONS>
+    <IDLCFLAGS value="-I$(BCB)\RX\Units -I$(BCB)\projects\bpl -I$(BCB)\projects -I$(BCB)\include 
+      -I$(BCB)\include\vcl -I$(BCB)\FastReport\source -I$(BCB)\EhLib 
+      -I&quot;C:\Program Files\Borland\CBuilder6\Projects\Lib&quot; 
+      -I&quot;C:\Program Files\Borland\CBuilder6\Include\!setup\MyList&quot; 
+      -I&quot;C:\Program Files\Borland\CBuilder6\Include\!setup\FastReport\LibBCB6&quot; 
+      -src_suffix cpp -D_DEBUG -boa"/>
+    <CFLAG1 value="-Od -H=$(BCB)\Lib\vcl60.csm -Vx -Ve -Tkh30000 -X- -r- -a8 -4 -b- -k -y -v 
+      -vi- -c -tW -tWM"/>
+    <CFLAG2 value=""/>
+    <CFLAG3 value=""/>
+    <PFLAGS value="-$Y+ -$W -$O- -$A8 -v -M -JPHNE"/>
+    <RFLAGS value=""/>
+    <AFLAGS value="/mx /w2 /zi"/>
+    <LFLAGS value="-D&quot;&quot; -aa -Tpe -x -Gn -v"/>
+    <IFLAGS value=""/>
+    <OTHERFILES value=""/>
+  </OPTIONS>
+  <LINKER>
+    <ALLOBJ value="c0w32.obj sysinit.obj $(OBJFILES)"/>
+    <ALLRES value="$(RESFILES)"/>
+    <ALLLIB value="$(LIBFILES) $(LIBRARIES) import32.lib cp32mt.lib"/>
+    <OTHERFILES value=""/>
+  </LINKER>
+  <FILELIST>
+      <FILE FILENAME="Dekanat.cpp" FORMNAME="" UNITNAME="Dekanat" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Dekanat.res" FORMNAME="" UNITNAME="Dekanat.res" CONTAINERID="ResTool" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="MainUnit.cpp" FORMNAME="MainForm" UNITNAME="MainUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SpravUnit.cpp" FORMNAME="SpravForm" UNITNAME="SpravUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DataModule.cpp" FORMNAME="DataModule1" UNITNAME="DataModule" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="StudUnit.cpp" FORMNAME="StudForm" UNITNAME="StudUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="CalendarUnit.cpp" FORMNAME="CalendarForm" UNITNAME="CalendarUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="AboutUnit.cpp" FORMNAME="AboutBox" UNITNAME="AboutUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SportUnit.cpp" FORMNAME="SportForm" UNITNAME="SportUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DeloUnit.cpp" FORMNAME="DeloForm" UNITNAME="DeloUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="PassUnit.cpp" FORMNAME="PassForm" UNITNAME="PassUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DialogPassUnit.cpp" FORMNAME="DialogPass" UNITNAME="DialogPassUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="StatisticUnit.cpp" FORMNAME="StatisticForm" UNITNAME="StatisticUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SplashUnit.cpp" FORMNAME="SplashForm" UNITNAME="SplashUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="VedomostUnit.cpp" FORMNAME="VedomostForm" UNITNAME="VedomostUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Edu_planUnit.cpp" FORMNAME="Edu_planForm" UNITNAME="Edu_planUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Add_Edu_planUnit.cpp" FORMNAME="Add_Edu_planForm" UNITNAME="Add_Edu_planUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="VedUnit.cpp" FORMNAME="Ved_Form" UNITNAME="VedUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Ved_ReportUnit.cpp" FORMNAME="Ved_ReportForm" UNITNAME="Ved_ReportUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Result_VedUnit.cpp" FORMNAME="Result_VedForm" UNITNAME="Result_VedUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Ball_Unit.cpp" FORMNAME="Ball_Form" UNITNAME="Ball_Unit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Dop_VedUnit.cpp" FORMNAME="Dop_VedForm" UNITNAME="Dop_VedUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Dop_Ved_ReportUnit.cpp" FORMNAME="Dop_Ved_ReportForm" UNITNAME="Dop_Ved_ReportUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SessionUnit.cpp" FORMNAME="Session_Form" UNITNAME="SessionUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DM2Unit.cpp" FORMNAME="DM2" UNITNAME="DM2Unit" CONTAINERID="CCompiler" DESIGNCLASS="TDataModule" LOCALCOMMAND=""/>
+      <FILE FILENAME="SpisocUnit.cpp" FORMNAME="SpisocForm" UNITNAME="SpisocUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="People_Card_ReportUnit.cpp" FORMNAME="People_card_ReportForm" UNITNAME="People_Card_ReportUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Func.cpp" FORMNAME="" UNITNAME="Func" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="All_StatisticUnit.cpp" FORMNAME="All_StatisticForm" UNITNAME="All_StatisticUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="PassDlgUnit.cpp" FORMNAME="PassDlg" UNITNAME="PassDlgUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="InfoUnit.cpp" FORMNAME="InfoForm" UNITNAME="InfoUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Semestr_SessionUnit.cpp" FORMNAME="Semestr_sessionForm" UNITNAME="Semestr_SessionUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DialogVed.cpp" FORMNAME="OKBottomDlg" UNITNAME="DialogVed" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DataModule_Card.cpp" FORMNAME="DataModule2" UNITNAME="DataModule_Card" CONTAINERID="CCompiler" DESIGNCLASS="TDataModule" LOCALCOMMAND=""/>
+      <FILE FILENAME="Add_UchKartUnit.cpp" FORMNAME="Add_UchKartForm" UNITNAME="Add_UchKartUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DM3Unit.cpp" FORMNAME="DM3" UNITNAME="DM3Unit" CONTAINERID="CCompiler" DESIGNCLASS="TDataModule" LOCALCOMMAND=""/>
+      <FILE FILENAME="Svod_VedUnit.cpp" FORMNAME="Svod_Ved" UNITNAME="Svod_VedUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Ved_GEKUnit.cpp" FORMNAME="Ved_GEK" UNITNAME="Ved_GEKUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Vipusk_StudUnit.cpp" FORMNAME="Vipusk_Stud" UNITNAME="Vipusk_StudUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="ADD_Ved_GEKUnit.cpp" FORMNAME="ADD_VedGEK" UNITNAME="ADD_Ved_GEKUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="VED_GEKResultUnit.cpp" FORMNAME="VED_GEKResult" UNITNAME="VED_GEKResultUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="BallGEKUnit.cpp" FORMNAME="Ball_GEK" UNITNAME="BallGEKUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Perezach_UchKartUnit.cpp" FORMNAME="Perezach_UchKartForm" UNITNAME="Perezach_UchKartUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Dop_Ved_RaznicaUnit.cpp" FORMNAME="Dop_Ved_RaznicaForm" UNITNAME="Dop_Ved_RaznicaUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Stud_Pr_RestoreUnit.cpp" FORMNAME="Stud_Pr_RestoreForm" UNITNAME="Stud_Pr_RestoreUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Prikaz_LikvidUnit.cpp" FORMNAME="Prikaz_LikvidForm" UNITNAME="Prikaz_LikvidUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Ved_LikvidUnit.cpp" FORMNAME="Ved_LikvidForm" UNITNAME="Ved_LikvidUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Dop_Ved_LikvidReportUnit.cpp" FORMNAME="Dop_Ved_LikvidReportForm" UNITNAME="Dop_Ved_LikvidReportUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Ball_LikvidUnit.cpp" FORMNAME="Ball_LikvidForm" UNITNAME="Ball_LikvidUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Rating_ReportUnit.cpp" FORMNAME="Rating_ReportForm" UNITNAME="Rating_ReportUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Ved_RatingUnit.cpp" FORMNAME="Ved_RatingForm" UNITNAME="Ved_RatingUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Dop_Ved_RatingUnit.cpp" FORMNAME="Dop_Ved_RatingForm" UNITNAME="Dop_Ved_RatingUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Result_Ball_RatingUnit.cpp" FORMNAME="Result_Ball_RatingForm" UNITNAME="Result_Ball_RatingUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Result_RatingUnit.cpp" FORMNAME="Result_RatingForm" UNITNAME="Result_RatingUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="PeopleVedUnit.cpp" FORMNAME="PeopleVedForm" UNITNAME="PeopleVedUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SpisokAllUnit.cpp" FORMNAME="SpisokAllForm" UNITNAME="SpisokAllUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="SpravkiUnit.cpp" FORMNAME="SpavkiForm" UNITNAME="SpravkiUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="PrivilegeUnit.cpp" FORMNAME="PrivilegeForm" UNITNAME="PrivilegeUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DiplomUnit.cpp" FORMNAME="DiplomForm" UNITNAME="DiplomUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="NK_3Unit.cpp" FORMNAME="NK_3Form" UNITNAME="NK_3Unit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="LikvidUchPlanUnit.cpp" FORMNAME="LikvidUchPlanForm" UNITNAME="LikvidUchPlanUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="VipusknikiUnit.cpp" FORMNAME="VipusknikiForm" UNITNAME="VipusknikiUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="AutoDiplomUnit.cpp" FORMNAME="AutoDiplomForm" UNITNAME="AutoDiplomUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="Raspred_StateUnit.cpp" FORMNAME="Raspred_StateForm" UNITNAME="Raspred_StateUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="EhLibBDE.pas" FORMNAME="" UNITNAME="EhLibBDE" CONTAINERID="PascalCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="PasportUnit.cpp" FORMNAME="PasportForm" UNITNAME="PasportUnit" CONTAINERID="CCompiler" DESIGNCLASS="" LOCALCOMMAND=""/>
+      <FILE FILENAME="DM4Unit.cpp" FORMNAME="DM4" UNITNAME="DM4Unit" CONTAINERID="CCompiler" DESIGNCLASS="TDataModule" LOCALCOMMAND=""/>
+  </FILELIST>
+  <BUILDTOOLS>
+  </BUILDTOOLS>
+
+  <IDEOPTIONS>
+[Version Info]
+IncludeVerInfo=1
+AutoIncBuild=0
+MajorVer=1
+MinorVer=16
+Release=58
+Build=0
+Debug=0
+PreRelease=0
+Special=0
+Private=0
+DLL=0
+Locale=1049
+CodePage=1251
+
+[Version Info Keys]
+CompanyName=БГУФК
+FileDescription=
+FileVersion=1.16.58.0
+InternalName=
+LegalCopyright=Отдел АСУ
+LegalTrademarks=
+OriginalFilename=
+ProductName=АСУ &quot;Деканат&quot;
+ProductVersion=1.0.0.0
+Comments=
+
+[HistoryLists\hlIncludePath]
+Count=15
+Item0=$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Lib;C:\Program Files\Borland\CBuilder6\Include\!setup\MyList;C:\Program Files\Borland\CBuilder6\Include\!setup\FastReport\LibBCB6
+Item1=$(BCB)\EhLib\Common;$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Lib;C:\Program Files\Borland\CBuilder6\Include\!setup\MyList;C:\Program Files\Borland\CBuilder6\Include\!setup\FastReport\LibBCB6
+Item2=$(BCB)\EhLib\Common;$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Lib;C:\Program Files\Borland\CBuilder6\Include\!setup\MyList
+Item3=$(BCB)\EhLib\Common;$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Lib
+Item4=$(BCB)\EhLib\Common;$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Bpl;C:\Program Files\Borland\CBuilder6\Projects\Lib
+Item5=$(BCB)\EhLib\Common;$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib
+Item6=$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib
+Item7=$(BCB)\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyList
+Item8=$(BCB)\RX\RX\Units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\FastReport\source;$(BCB)\MyComponent
+Item9=$(BCB)\rx\units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\MyComponent;$(BCB)\FastReport\source
+Item10=$(BCB)\rx\units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl;$(BCB)\MyComponent
+Item11=$(BCB)\rx\units;$(BCB)\projects\bpl;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl
+Item12=$(BCB)\rx\units;$(BCB)\projects\bpl;..\..\..\my programm\dekanat\asu_dekanat;$(BCB)\projects;$(BCB)\include;$(BCB)\include\vcl
+Item13=d:\program files\borland\cbuilder3\rx\units;d:\vfp\samples\graphics\bmps\fox;d:\vfp\samples\graphics\bmps\assorted;..\..\..\my programm\dekanat\asu_dekanat;d:\program files\borland\cbuilder3\projects;$(BCB)\include;$(BCB)\include\vcl
+Item14=d:\vfp\samples\graphics\bmps\fox;d:\vfp\samples\graphics\bmps\assorted;..\..\..\my programm\dekanat\asu_dekanat;d:\program files\borland\cbuilder3\projects;$(BCB)\include;$(BCB)\include\vcl
+
+[HistoryLists\hlLibraryPath]
+Count=14
+Item0=$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Bpl;C:\Program Files\Borland\CBuilder6\Include\!setup\MyList
+Item1=$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Bpl
+Item2=$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Bpl;C:\Program Files\Borland\CBuilder6\Projects\Lib
+Item3=$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib
+Item4=$(BCB)\EhLib\Common;$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib
+Item5=$(BCB)\EhLib\Common;$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\MyList;$(BCB)\EhLib;C:\Program Files\Borland\CBuilder6\Projects\Lib
+Item6=$(BCB)\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\MyList
+Item7=$(BCB)\RX\RX\Units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\FastReport\source;$(BCB)\MyComponent
+Item8=$(BCB)\rx\units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\MyComponent;$(BCB)\FastReport\source
+Item9=$(BCB)\rx\units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib;$(BCB)\MyComponent
+Item10=$(BCB)\rx\units;$(BCB)\projects\lib;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib
+Item11=$(BCB)\rx\units;$(BCB)\projects\lib;..\..\..\my programm\dekanat\asu_dekanat;$(BCB)\projects;$(BCB)\lib\obj;$(BCB)\lib
+Item12=d:\program files\borland\cbuilder3\rx\units;d:\vfp\samples\graphics\bmps\fox;d:\vfp\samples\graphics\bmps\assorted;..\..\..\my programm\dekanat\asu_dekanat;d:\program files\borland\cbuilder3\projects;$(BCB)\lib\obj;$(BCB)\lib
+Item13=d:\vfp\samples\graphics\bmps\fox;d:\vfp\samples\graphics\bmps\assorted;..\..\..\my programm\dekanat\asu_dekanat;d:\program files\borland\cbuilder3\projects;$(BCB)\lib\obj;$(BCB)\lib
+
+[HistoryLists\hlDebugSourcePath]
+Count=5
+Item0=$(BCB)\source\vcl;$(BCB)\FastReport\source;$(BCB)\Include\Vcl\;$(BCB)\EhLib
+Item1=$(BCB)\source\vcl;$(BCB)\FastReport\source;$(BCB)\Include\Vcl\
+Item2=$(BCB)\source\vcl;$(BCB)\FastReport\source;C:\Program Files\Borland\CBuilder6\Include\Vcl\
+Item3=$(BCB)\source\vcl;$(BCB)\FastReport\source
+Item4=$(BCB)\source\vcl
+
+[HistoryLists\hlConditionals]
+Count=3
+Item0=_DEBUG
+Item1=_RTLDLL;USEPACKAGES
+Item2=USEPACKAGES
+
+[Debugging]
+DebugSourceDirs=$(BCB)\source\vcl;$(BCB)\FastReport\source;$(BCB)\Include\Vcl\;$(BCB)\EhLib
+
+[Parameters]
+RunParams=
+Launcher=
+UseLauncher=0
+DebugCWD=
+HostApplication=
+RemoteHost=
+RemotePath=
+RemoteLauncher=
+RemoteCWD=
+RemoteDebug=0
+
+[Compiler]
+ShowInfoMsgs=0
+LinkDebugVcl=0
+LinkCGLIB=0
+
+[CORBA]
+AddServerUnit=1
+AddClientUnit=1
+PrecompiledHeaders=1
+
+[Language]
+ActiveLang=
+ProjectLang=
+RootDir=
+  </IDEOPTIONS>
+</PROJECT>

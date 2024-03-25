@@ -1,0 +1,274 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<Resources CodePage="1252">
+  <StrRes Name="propActive" Text="Bestemmer om et datasett er åpent eller ikke"/>
+  <StrRes Name="propActive.TfrxHighlight" Text="Bestemmer om highlight er aktiv eller ikke"/>
+  <StrRes Name="propAliasName" Text="Navnet på BDE aliaset"/>
+  <StrRes Name="propAlign" Text="Bestemmer om justeringen av objekter er relativ til bånd eller side"/>
+  <StrRes Name="propAlignment" Text="Bestemmer justeringen av objektets tekst"/>
+  <StrRes Name="propAllowAllUp" Text="Bestemmer om alle speedbuttons i gruppen kan bli fravalgt på samme tid"/>
+  <StrRes Name="propAllowEdit" Text="Bestemmer om brukeren må editere i den forberedte rapports sider"/>
+  <StrRes Name="propAllowExpressions" Text="Bestemmer om tekst-objektet må inneholde uttryk inne i teksten"/>
+  <StrRes Name="propAllowGrayed" Text="Tillat grå tilstand for kontrollens checkboks"/>
+  <StrRes Name="propAllowHTMLTags" Text="Bestemmer om tekst-objektet må inneholde HTML tags inne i teksten"/>
+  <StrRes Name="propAllowSplit" Text="Bestemmer om båndet må dele innhold på flere sider"/>
+  <StrRes Name="propAuthor" Text="Rapportens forfatter"/>
+  <StrRes Name="propAutoSize.TfrxPictureView" Text="Bestemmer om bildet skal håndtere størrelse automatisk"/>
+  <StrRes Name="propAutoWidth" Text="Bestemmer om tekst-objektet skal håndtere bredde automatisk"/>
+  <StrRes Name="propBackPicture" Text="Bakgrunn-sidens billede"/>
+  <StrRes Name="propBarType" Text="Type av strek kode"/>
+  <StrRes Name="propBevelInner" Text="Type av den indre bevel"/>
+  <StrRes Name="propBevelOuter" Text="Type av den ytre bevel"/>
+  <StrRes Name="propBevelWidth" Text="Bredden av bevel"/>
+  <StrRes Name="propBorder" Text="Bestemmer om det skal vises ytre kant eller ikke"/>
+  <StrRes Name="propBorderStyle" Text="Vinduets stil"/>
+  <StrRes Name="propBottomMargin" Text="Størrelse av side bunn-marg"/>
+  <StrRes Name="propBrushStyle" Text="Stilen for pensel anvendt på objektets bakgrunn"/>
+  <StrRes Name="propCalcCheckSum" Text="Bestemmer om strek koden automatisk skal beregne checktal"/>
+  <StrRes Name="propCancel" Text="Bestemmer om knapp skal aktiveres, hvis Esc-knappen blir trykket"/>
+  <StrRes Name="propCaption" Text="Kort tittel for kontrollen"/>
+  <StrRes Name="propCellFields" Text="Navnene på DB felterne representeret i kryss-cellene"/>
+  <StrRes Name="propCellLevels" Text="Antallet celleniveauer"/>
+  <StrRes Name="propCenter" Text="Bestemmer om bildet skal sentreres inne i kontrollen"/>
+  <StrRes Name="propCharset" Text="Karaktersettet for skrifttypen"/>
+  <StrRes Name="propCharSpacing" Text="Antall pixels mellom to tegn"/>
+  <StrRes Name="propCheckColor" Text="Farven for vingebeinet"/>
+  <StrRes Name="propChecked" Text="Angir om kontrollen er avkrysset"/>
+  <StrRes Name="propCheckStyle" Text="Stilen for vingebenet"/>
+  <StrRes Name="propChild" Text="Child båndet forbundet til dette bånd"/>
+  <StrRes Name="propClipped" Text="Bestemmer om teksten skal være klemt sammen inne i objektets rammer"/>
+  <StrRes Name="propCollate" Text="Standard oppsett for sammenligning"/>
+  <StrRes Name="propColor.TFont" Text="Farge på teksten"/>
+  <StrRes Name="propColor" Text="Farge på objektet"/>
+  <StrRes Name="propColor.TfrxFrame" Text="Farge på rammen"/>
+  <StrRes Name="propColor.TfrxHighlight" Text="Bestemmer farge på objektet, hvis highlight er aktivt"/>
+  <StrRes Name="propColumnFields" Text="Navnene på DB feltene representeret i krysskolonnene"/>
+  <StrRes Name="propColumnGap" Text="Avstand mellem kolonnebåndene"/>
+  <StrRes Name="propColumnLevels" Text="Antall kolonne nivåer"/>
+  <StrRes Name="propColumns" Text="Antallet af kolonner i båndet"/>
+  <StrRes Name="propColumnWidth" Text="Bredden på kolonnebåndet"/>
+  <StrRes Name="propCondition" Text="Grupperingsbetingelse. Gruppen vil blive brutt, hvis verdien uttrykk skifter"/>
+  <StrRes Name="propCondition.TfrxHighlight" Text="Uttrykks streng. Hvis dette uttrykk er sant, vil highlight bli aktivt"/>
+  <StrRes Name="propConnected" Text="Angir om database-forbindelsen er aktiv"/>
+  <StrRes Name="propConvertNulls" Text="Bestemmer om null DB verdi skal konvereteres til 0, False eller en tom streng"/>
+  <StrRes Name="propCopies" Text="Standard antall kopier"/>
+  <StrRes Name="propCursor" Text="Markøren for objektet"/>
+  <StrRes Name="propDatabaseName" Text="Navnet på databasen"/>
+  <StrRes Name="propDataField" Text="Angir feltet fra hvilket objektet får dens data"/>
+  <StrRes Name="propDataSet" Text="Sammenkjeder objektet til datasettet som inneholder feltet som det representerer"/>
+  <StrRes Name="propDate" Text="Dato-verdien for kontrollen"/>
+  <StrRes Name="propDateFormat" Text="Angir formatet for, hvordan en dato blir representeret"/>
+  <StrRes Name="propDecimalSeparator" Text="Desimalseparator"/>
+  <StrRes Name="propDefault" Text="Bestemmer om knappen er standard knapp"/>
+  <StrRes Name="propDefHeight" Text="Rekkens standard høyde"/>
+  <StrRes Name="propDescription.TfrxReportOptions" Text="Rapportens beskrivelse"/>
+  <StrRes Name="propDescription" Text="Objektets beskrivelse"/>
+  <StrRes Name="propDiagonal" Text="Angir at linjen er diagonal"/>
+  <StrRes Name="propDisplayFormat" Text="Formatet for den viste verdi"/>
+  <StrRes Name="propDoublePass" Text="Bestemmer om rapportgeneratoren skal lage et annet gennomløp"/>
+  <StrRes Name="propDown" Text="Bestemmer om speedbutton er trykket eller ikke"/>
+  <StrRes Name="propDownThenAcross" Text="Bestemmer hvordan store krydstabeller vil bli delt på sidene"/>
+  <StrRes Name="propDriverName" Text="Navnet på BDE driveren"/>
+  <StrRes Name="propDropShadow" Text="Bestemmer om objektet har skygge"/>
+  <StrRes Name="propDuplex" Text="Angir duplex mode for siden"/>
+  <StrRes Name="propEditMask" Text="Angir masken som representerer hvilken tekst er gyldig for masked edit kontroll"/>
+  <StrRes Name="propEnabled" Text="Bestemmer om kontrollen er tilgengelig"/>
+  <StrRes Name="propEngineOptions" Text="Rapportgenerator valgmulighet"/>
+  <StrRes Name="propExpression" Text="Verdien av dette uttryk vil bli vist i objektet"/>
+  <StrRes Name="propExpressionDelimiters" Text="Tegnet som vil bli brukt til å omslutte uttrykket inneholdt i teksten"/>
+  <StrRes Name="propFieldAliases" Text="Datasettes felt aliaser"/>
+  <StrRes Name="propFilter" Text="Filtreringsbetingelserne for datasettet"/>
+  <StrRes Name="propFiltered" Text="Bestemmer om datasettet skal filtrere postene ved bruk av betingelsene i Filter egenskapen"/>
+  <StrRes Name="propFlowTo" Text="Tekst-objektet som vil vise tekst som ikke passer inn i objektet"/>
+  <StrRes Name="propFont" Text="Skrifttype attributter for objektet"/>
+  <StrRes Name="propFooterAfterEach" Text="Bestemmer om fotbåndet skal vises etter hver datarekke"/>
+  <StrRes Name="propFormatStr" Text="Den formatterte streng"/>
+  <StrRes Name="propFrame" Text="Ramme attributter for objektet"/>
+  <StrRes Name="propGapX" Text="Tekstens venstre innrykk"/>
+  <StrRes Name="propGapY" Text="Tekstens topp innrykk"/>
+  <StrRes Name="propGlyph" Text="Bilde for kontrollen"/>
+  <StrRes Name="propGroupIndex" Text="Tillat at speedbuttons arbeider sammen som en gruppe"/>
+  <StrRes Name="propHAlign" Text="Den horisontale justering av teksten"/>
+  <StrRes Name="propHeight" Text="Høyden av objektet"/>
+  <StrRes Name="propHideZeros" Text="Bestemmer om tekst-objektet skal skjule null-verdier"/>
+  <StrRes Name="propHighlight" Text="Attributter for betingelses-highlight"/>
+  <StrRes Name="propIndexName" Text="Navnet på indeks"/>
+  <StrRes Name="propInitString" Text="Printeres init streng for dot-matrix rapporter"/>
+  <StrRes Name="propItems" Text="List objektets elementer"/>
+  <StrRes Name="propKeepAspectRatio" Text="Behold det originale størrelsesforhold på bildet"/>
+  <StrRes Name="propKeepChild" Text="Bestemmer om båndet skal utskrives sammen med dens barn"/>
+  <StrRes Name="propKeepFooter" Text="Bestemmer om båndet skal utskrives sammen med dens fot"/>
+  <StrRes Name="propKeepHeader" Text="Bestemmer om båndet skal utskrives sammen med dens hode"/>
+  <StrRes Name="propKeepTogether" Text="Bestemmer om båndet skal utskrives sammen med alle dens sub-bånd"/>
+  <StrRes Name="propKind.TfrxFormat" Text="Typen av formattering"/>
+  <StrRes Name="propKind" Text="Typen av knapp"/>
+  <StrRes Name="propLargeDesignHeight" Text="Bestemmer om siden skal ha stor høyde i designmode"/>
+  <StrRes Name="propLayout" Text="Layoutet for knappens glyph"/>
+  <StrRes Name="propLeft" Text="Venstre koordinat for objektet"/>
+  <StrRes Name="propLeftMargin" Text="Størrelsen på venstre marg"/>
+  <StrRes Name="propLines" Text="Teksten for objektet"/>
+  <StrRes Name="propLineSpacing" Text="Antallet pixler mellom to linjer tekst"/>
+  <StrRes Name="propLoginPrompt" Text="Bestemmer om det skal vises en login dialogboks"/>
+  <StrRes Name="propMargin" Text="Bestemmer antallet av pixler mellom kanten av bildet og kanten av knappen"/>
+  <StrRes Name="propMaster" Text="Master datasett"/>
+  <StrRes Name="propMasterFields" Text="Feltene som er sammensatt av en master-detail relation"/>
+  <StrRes Name="propMaxLength" Text="Max lengde av tekst"/>
+  <StrRes Name="propMaxWidth" Text="Max bredden av kolonne"/>
+  <StrRes Name="propMemo" Text="Teksten for objektet"/>
+  <StrRes Name="propMinWidth" Text="Min bredde for kolonne"/>
+  <StrRes Name="propMirrorMargins" Text="Speil sidemarg på de like sidene"/>
+  <StrRes Name="propModalResult" Text="Bestemmer om og hvordan knappen lukker det modale form"/>
+  <StrRes Name="propName.TFont" Text="Navnet på skrift typen"/>
+  <StrRes Name="propName.TfrxReportOptions" Text="Navnet på rapporten"/>
+  <StrRes Name="propName" Text="Navnet på objektet"/>
+  <StrRes Name="propNumGlyphs" Text="Angir antall bilder for Glyph egenskapen"/>
+  <StrRes Name="propOpenDataSource" Text="Bestemmer om datakilden automatisk skal åpnes eller ikke"/>
+  <StrRes Name="propOrientation" Text="Sidens retning"/>
+  <StrRes Name="propOutlineText" Text="Teksten som blir vist i vis utskrifts kontrol"/>
+  <StrRes Name="propOutlineVisible" Text="Synlig eller usynlig visning i utskrifts kontrol"/>
+  <StrRes Name="propOutlineWidth" Text="Bredden av vis utskrift kontrol"/>
+  <StrRes Name="propPageNumbers.TfrxPrintOptions" Text="Antallet sider for utskrift"/>
+  <StrRes Name="propPaperHeight" Text="Høyden på siden"/>
+  <StrRes Name="propPaperWidth" Text="Bredden på siden"/>
+  <StrRes Name="propParagraphGap" Text="Innrykningen av første linje av punktopstillingen"/>
+  <StrRes Name="propParams.TfrxBDEDatabase" Text="Parameter for forbindelsen"/>
+  <StrRes Name="propParams" Text="Parameter for forespørrelsen"/>
+  <StrRes Name="propParentFont" Text="Bestemmer om objektet skal bruke Parent skrifttype"/>
+  <StrRes Name="propPassword" Text="Rapportens passord"/>
+  <StrRes Name="propPasswordChar" Text="Indikerer tegnet, hvis noen, som skal vises i stedet for faktiske tegn angitt i kontrollen"/>
+  <StrRes Name="propPicture" Text="Bildet"/>
+  <StrRes Name="propPicture.TfrxReportOptions" Text="Det beskrivende bilde for rapporten"/>
+  <StrRes Name="propPosition" Text="Den initiale position av vinduet"/>
+  <StrRes Name="propPreviewOptions" Text="Vis utskrift-valgmuligheder for rapporten"/>
+  <StrRes Name="propPrintable" Text="Utskriftsbarhet for objektet. Objekter med Utskrivbar=False vil bli vist, men ikke utskrevet"/>
+  <StrRes Name="propPrintChildIfInvisible" Text="Bestemmer om child-båndet vil blive utskrevet hvis dets foreldrebånd er usynligt"/>
+  <StrRes Name="propPrinter" Text="Navnet på printeren, som vil bli valgt hvis denne rapport blir åpnet eller kjørt"/>
+  <StrRes Name="propPrintIfDetailEmpty" Text="Bestemmer om databåndet vil blive udskrevet hvis dens subbånd er tomme"/>
+  <StrRes Name="propPrintIfEmpty" Text="Bestemmer om siden vil bli utskrevet, hvis alle datasett er tomme"/>
+  <StrRes Name="propPrintOnFirstPage" Text="Bestemmer om båndet vil bli utskrevet på den første side"/>
+  <StrRes Name="propPrintOnLastPage" Text="Bestemmer om båndet vil bli utskrevet på den siste side"/>
+  <StrRes Name="propPrintOnParent" Text="Bestemmer om subrapporten kan utskrive seg selv på foreldrebåndet"/>
+  <StrRes Name="propPrintOnPreviousPage" Text="Bestemmer om siden kan bli generert i den ledige plass fra en tidligere genereret side"/>
+  <StrRes Name="propPrintOptions" Text="Utskriftvalg mulighetene for rapporten"/>
+  <StrRes Name="propPrintPages" Text="Bestemmer om alle, ulike eller like sider skal utskrives"/>
+  <StrRes Name="propRangeBegin" Text="Bestemmer startpunktet for datasetts navigator"/>
+  <StrRes Name="propRangeEnd" Text="Bestemmer sluttpunktet for datasetts navigator"/>
+  <StrRes Name="propRangeEndCount" Text="Bestemmer antall poster i datasettet hvis RangeEnd er recCount"/>
+  <StrRes Name="propReadOnly" Text="Bestemmer om tekstobjektet er skrivebeskyttet"/>
+  <StrRes Name="propRepeatHeaders" Text="Bestemmer om kolonne og rekke hode skal gentaes på ny side"/>
+  <StrRes Name="propReportOptions" Text="Valgmulighetene for rapporten"/>
+  <StrRes Name="propReprintOnNewPage" Text="Bestemmer om båndet skal genskrives på ny side"/>
+  <StrRes Name="propRestrictions" Text="Innstilling av restriktionsflag"/>
+  <StrRes Name="propRightMargin" Text="Størrelsen av høyre side marg"/>
+  <StrRes Name="propRotation.TfrxBarCodeView" Text="Retning for strek koden"/>
+  <StrRes Name="propRotation" Text="Tekst rotation"/>
+  <StrRes Name="propRowCount" Text="Antallet virtuelle poster i databåndet"/>
+  <StrRes Name="propRowFields" Text="Navn på DB felter representeret i kryss-rekkene"/>
+  <StrRes Name="propRowLevels" Text="Antallet av rekke nivåer"/>
+  <StrRes Name="propRTLReading" Text="Bestemmer om tekst-objektet vil vise tekst i høyre-til-venstre retning"/>
+  <StrRes Name="propSessionName" Text="Navnet på BDE sessionen"/>
+  <StrRes Name="propShadowColor" Text="Fargen på skyggen"/>
+  <StrRes Name="propShadowWidth" Text="Bredden på skyggen"/>
+  <StrRes Name="propShape" Text="Type form"/>
+  <StrRes Name="propShiftMode" Text="Skift oppførelse for objektet"/>
+  <StrRes Name="propShowColumnHeader" Text="Bestemmer om kryss-tab skal vise kolonnehoder"/>
+  <StrRes Name="propShowColumnTotal" Text="Bestemmer om kryss-tab skal vise kolonne total"/>
+  <StrRes Name="propShowRowHeader" Text="Bestemmer om kryss-tab skal vise rekkehoder"/>
+  <StrRes Name="propShowRowTotal" Text="Bestemmer om kryss-tab skal vise rekke grand total"/>
+  <StrRes Name="propShowDialog" Text="Bestemmer om utskriv-dialogboksen skal vises i vis utskrift-vinduet"/>
+  <StrRes Name="propShowText" Text="Bestemmer om et strek kode objekt skal vise en lesbar tekst"/>
+  <StrRes Name="propSize" Text="Størrelse på skrifttypen"/>
+  <StrRes Name="propSorted" Text="Bestemmer om elementer er sorteret eller ikke"/>
+  <StrRes Name="propSpacing" Text="Bestemmer antallet pixler mellom bilde og tekst"/>
+  <StrRes Name="propSQL" Text="SQL uttrykket"/>
+  <StrRes Name="propStartNewPage" Text="Starter på en ny side før utprintning av et bånd"/>
+  <StrRes Name="propStretch" Text="Utstrekker bildet til å passe objektets grenser"/>
+  <StrRes Name="propStretched" Text="Bestemmer om objektet kan bli utstrukket"/>
+  <StrRes Name="propStretchMode" Text="Oppførsel av udstrekningen for objektet"/>
+  <StrRes Name="propStyle.TFont" Text="Stilen på skriftstypen"/>
+  <StrRes Name="propStyle" Text="Stilen på kontrollen"/>
+  <StrRes Name="propStyle.TfrxFrame" Text="Stilen på objektets ramme"/>
+  <StrRes Name="propSuppressRepeated" Text="Undertrykk gjentatte verdier"/>
+  <StrRes Name="propTableName" Text="Navnet på data tabellen"/>
+  <StrRes Name="propTag" Text="Tag-nummer for objektet"/>
+  <StrRes Name="propTagStr" Text="Tag-streng for objektet"/>
+  <StrRes Name="propText" Text="Teksten for objektet"/>
+  <StrRes Name="propTitleBeforeHeader" Text="Bestemmer om rapportitlen skal vises før sidehodet"/>
+  <StrRes Name="propTop" Text="Koordinater for objektet øverst"/>
+  <StrRes Name="propTopMargin" Text="Størrelsen for øverste sidemarg"/>
+  <StrRes Name="propTyp" Text="Typen for rammen"/>
+  <StrRes Name="propUnderlines" Text="Bestemmer om tekstobjekter skal vise rutelinjer etter hver tekstlinie"/>
+  <StrRes Name="propURL" Text="URL for objektet"/>
+  <StrRes Name="propUserName" Text="Brukernavn for data objektet. Dette navn vil bli vist i data-treet"/>
+  <StrRes Name="propVAlign" Text="Den vertikale justering av teksten"/>
+  <StrRes Name="propVersionBuild" Text="Versjonsinfo, build"/>
+  <StrRes Name="propVersionMajor" Text="Versjonsinfo, major version"/>
+  <StrRes Name="propVersionMinor" Text="Versjonsinfo, minor version"/>
+  <StrRes Name="propVersionRelease" Text="Versjonsinfo, frigivelse"/>
+  <StrRes Name="propVisible" Text="Synlighet av objektet"/>
+  <StrRes Name="propWidth" Text="Bredden på objektet"/>
+  <StrRes Name="propWidth.TfrxFrame" Text="Bredden av rammen"/>
+  <StrRes Name="propWindowState" Text="Initiell status av vinduet"/>
+  <StrRes Name="propWordBreak" Text="Bryt ord tekst"/>
+  <StrRes Name="propWordWrap" Text="Bestemmer om tekstobjektet skal sette inn et bløtt vognskifte, så teksten deles ved den høyre margen"/>
+  <StrRes Name="propZoom.TfrxBarCodeView" Text="Zooms strek koden"/>
+  <StrRes Name="propConnectionName" Text="Navnet på forbindelsen til databasen, brukt i rapporten"/>
+  <StrRes Name="propCurve" Text="Kontur på hjørnerne på det avrundede rektangel"/>
+  <StrRes Name="propDrillDown" Text="Bestemmer om grupper kan bli trukket ned"/>
+  <StrRes Name="propFontStyle" Text="Dot-matrix skrift-type stil"/>
+  <StrRes Name="propHideIfSingleDataRecord" Text="Skjul footer, hvis gruppen kun har en data-post"/>
+  <StrRes Name="propOutlineExpand" Text="Bestemmer om rapportoversikten skal utvides eller ikke"/>
+  <StrRes Name="propPlainCells" Text="Bestemmer om det skal printes flere celler side ved side eller stables"/>
+  <StrRes Name="propPrintMode" Text="Utskriftsmodus: normal, oppsplit store sider til små, eller utskrift av flere små sider på en stor"/>
+  <StrRes Name="propPrintOnSheet" Text="Papirstørrelse til utskrift av rapporten. Brukt hvis utskriftmodus ikke er pmDefault"/>
+  <StrRes Name="propResetPageNumbers" Text="Nullstill sidenummer/totalt antal sider når der skrives en gruppe. Bør anvendes når StartNewPage valgmuligheden er sann"/>
+  <StrRes Name="propReverse" Text="Bestemmer om det skal skrives i omvendt rekkefølge"/>
+  <StrRes Name="propShowFooterIfDrillDown" Text="Bestemmer om gruppefoten skal vises, hvis gruppen er nedsenket"/>
+  <StrRes Name="propSizeMode" Text="Visningsmodus for OLE objekt"/>
+  <StrRes Name="propVersion" Text="FastReport Version"/>
+  <StrRes Name="propWideBarRatio" Text="Relativ bredden på strek koden"/>
+  <StrRes Name="propWysiwyg" Text="Bestemmer om objektet skal bruke skriver canvas/bakgrunn for å formatere teksten. En printer må være installert og klar."/>
+  <StrRes Name="propArrowEnd" Text="Bestemmer om det skal tegnes/vises en pil ved slutten av linjen"/>
+  <StrRes Name="propArrowLength" Text="Lengden på pilen"/>
+  <StrRes Name="propArrowSolid" Text="Bestemmer om det skal tegnes en utfyldt pil"/>
+  <StrRes Name="propArrowStart" Text="Bestemmer om det skal tegnes en pil ved starten av linjen"/>
+  <StrRes Name="propArrowWidth" Text="Bredden på pilen"/>
+  <StrRes Name="propCloseDataSource" Text="Bestemmer om datasettet skal lukkes når rapporten er avsluttet"/>
+  <StrRes Name="propDatabase" Text="Database forbindelse"/>
+  <StrRes Name="propIndexFieldNames" Text="Navne på indeks felter"/>
+  <StrRes Name="propCommandTimeOut" Text="Tiden der er behov for, for at eksekvere en forespørsel"/>
+  <StrRes Name="propExpandDrillDown" Text="Bestemmer om alle trekk-ned elementer skal utvides fra starten av rapporten"/>
+  <StrRes Name="propWysiwyg.TfrxMemoView" Text="Bestemmer om en tekst skal vises i WYSIWYG modus"/>
+  <StrRes Name="propLeftLine" Text="Venstre linje av rammen"/>
+  <StrRes Name="propTopLine" Text="Top linje av rammen"/>
+  <StrRes Name="propRightLine" Text="Høyre linje av rammen"/>
+  <StrRes Name="propBottomLine" Text="Nederste linje av rammen"/>
+  <StrRes Name="propColor.TfrxFrameLine" Text="Farge på rammelinjen"/>
+  <StrRes Name="propStyle.TfrxFrameLine" Text="Stil på rammelinjen"/>
+  <StrRes Name="propWidth.TfrxFrameLine" Text="Bredden på rammelinjen"/>
+  <StrRes Name="propFileLink" Text="Uttryk eller navnet på filen, som inneholder et bilde"/>
+  <StrRes Name="propEndlessWidth" Text="Endeløs side-modus. Hvis sann, vil siden vokse avhengig av antall dataposter på den"/>
+  <StrRes Name="propEndlessHeight" Text="Endeløs side-modus. Hvis sann, vil siden vokse avhengig av antall dataposter på den"/>
+  <StrRes Name="propAddHeight" Text="Tilføyer den angitte plass til cellehøyden"/>
+  <StrRes Name="propAddWidth" Text="Tilføyer den angitte plass til cellebredden"/>
+  <StrRes Name="propAllowDuplicates" Text="Bestemmer om cellen kan inneholde identiske strengverdier"/>
+  <StrRes Name="propJoinEqualCells" Text="Bestemmer om krysstab skal sammensette celler med like verdier"/>
+  <StrRes Name="propNextCross" Text="Pekepinne til neste krysstab, som vil bli vist side-ved-side"/>
+  <StrRes Name="propNextCrossGap" Text="Avstand mellem side-ved-side krysstab"/>
+  <StrRes Name="propShowCorner" Text="Bestemmer om krysstab skal vise venstre-top hjørne elementer"/>
+  <StrRes Name="propSuppressNullRecords" Text="Bestemmer om krysstab skal undertrykke poster med utelukkende NULL verdier"/>
+  <StrRes Name="propShowTitle" Text="Bestemmer om krysstab skal vise en tittel"/>
+  <StrRes Name="propAutoSize" Text="Bestemmer om krysstab skal håndtere dens størrelse automatisk"/>
+  <StrRes Name="propShowHint" Text="Bestemmer om objektet skal vise en hjelpetekst, når markøren flyttes over det"/>
+  <StrRes Name="propHint" Text="Hjelpetekst"/>
+  <StrRes Name="propPaperSize" Text="Papir størrelse"/>
+  <StrRes Name="propPageCount" Text="Antall sider"/>
+  <StrRes Name="propBackPictureVisible" Text="Bestemmer om siden skal vise et bakgrunns bilde"/>
+  <StrRes Name="propBackPicturePrintable" Text="Bestemmer om siden skal skrive ut et bakgrunns bilde"/>
+  <StrRes Name="propHightQuality" Text="Vis bilde i høy kvalitet"/>
+  <StrRes Name="propLockType" Text="Angi låsnings typen som anvendes, når et datasett åpnes"/>
+  <StrRes Name="propIgnoreDupParams" Text="Ignorer identiske parametre i ParamEditor"/>
+  <StrRes Name="propTransparent" Text="Bestemmer om bildet kan være transparent"/>
+  <StrRes Name="propTransparentColor" Text="Transparent farge"/>
+  <StrRes Name="propIgnoreNulls" Text="Tillat å ignorere Null verdier i diagrammet"/>
+  <StrRes Name="propShowClildIfDrillDown" Text="Bestemmer om child-båndet blir vist, hvis gruppen rulles ned"/>
+</Resources>

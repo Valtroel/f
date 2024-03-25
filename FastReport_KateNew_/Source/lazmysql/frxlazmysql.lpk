@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="frxlazmysql"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <IncludeFiles Value=".."/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Version Major="5" Minor="6" Release="0"/>
+    <Files Count="3">
+      <Item1>
+        <Filename Value="frxlazmysqlcomp.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="frxlazmysqlcomp"/>
+      </Item1>
+      <Item2>
+        <Filename Value="frxlazmysqleditor.pas"/>
+        <UnitName Value="frxlazmysqleditor"/>
+      </Item2>
+      <Item3>
+        <Filename Value="frxlazmysqlrtti.pas"/>
+        <UnitName Value="frxlazmysqlrtti"/>
+      </Item3>
+    </Files>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="fr5_lazarus"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="FCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

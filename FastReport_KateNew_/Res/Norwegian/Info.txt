@@ -1,0 +1,3 @@
+Language Resources for FastReport 5
+Language: Norwegian
+Translator: Geir Hole
